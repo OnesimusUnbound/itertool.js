@@ -117,16 +117,44 @@ $(document).ready(function() {
     var items, gen, itemCount;
     
     gen = itertool.compress('ABCDEFG', [1, 0, 0, 1, 1, 0, 1]); items = [];
-    while(gen.hasNext()) { items.push(gen.next()); } 
-    equals(items.join(' '), 'A D E G', 'compress test');
+    try {
+        for(i = 0; i < 100; i++)
+            items.push(gen.next());
+            
+    } catch (err) {
+        if (err === StopIteration)
+            equals(
+                items.join(' '), 
+                'A D E G', 
+                'properly selecting array');
+    }
     
     gen = itertool.compress([5, 3, 7, 10], [true, false, false, true]); items = [];
-    while(gen.hasNext()) { items.push(gen.next()); } 
-    equals(items.join(' '), '5 10', 'compress test for array');
+    try {
+        for(i = 0; i < 100; i++)
+            items.push(gen.next());
+            
+    } catch (err) {
+        if (err === StopIteration)
+            equals(
+                items.join(' '), 
+                '5 10', 
+                'compress test for array');
+    }
+    
     
     gen = itertool.compress({"a": 12, "p": "Testing", "o": -54, "g": "@" }, ["", null, "A", new Object()]); items = [];
-    while(gen.hasNext()) { items.push(gen.next()); } 
-    equals(items.join(' '), '-54 @', 'compress test for object');
+    try {
+        for(i = 0; i < 100; i++)
+            items.push(gen.next());
+            
+    } catch (err) {
+        if (err === StopIteration)
+            equals(
+                items.join(' '), 
+                '-54 @', 
+                'compress test for object');
+    }
     
     raises(
         function(){ gen.next(); }, 

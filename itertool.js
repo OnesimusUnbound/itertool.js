@@ -254,7 +254,10 @@
             iterSelector = toIterator(selectors);
             
         return extendIterator(function(){
-            throw StopIteration;
+            while(!iterSelector.next()) {
+                iterData.next();
+            }
+            return iterData.next();
         });
     };
     
