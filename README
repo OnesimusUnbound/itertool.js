@@ -1,7 +1,7 @@
-itertools.js
-============
+itertool.js
+===========
 
-itertools.js is a JavaScript library containing functions for iteration. 
+itertool.js is a JavaScript library containing functions for iteration. 
 
 Based on [Python's itertools](http://docs.python.org/library/itertools.html).
 
