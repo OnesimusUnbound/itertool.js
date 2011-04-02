@@ -1,0 +1,29 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>itertools.js Test Suite</title>
+  <link rel="stylesheet" href="vendor/qunit.css" type="text/css" media="screen" />
+  <script type="text/javascript" src="vendor/jquery.js"></script>
+  <script type="text/javascript" src="vendor/qunit.js"></script>
+  <script type="text/javascript" src="vendor/underscore.js"></script>
+  <script type="text/javascript" src="../itertool.js"></script>
+  
+  <script type="text/javascript" src="builder.js"></script>
+  <script type="text/javascript" src="infinite.js"></script>
+  <script type="text/javascript" src="terminating.js"></script>
+</head>
+<body>
+  <h1 id="qunit-header">itertools.js Test Suite</h1>
+  <h2 id="qunit-banner"></h2>
+  <h2 id="qunit-userAgent"></h2>
+  <ol id="qunit-tests"></ol>
+  <br />
+  
+  <script type="text/html" id="template">
+      <%
+      if (data) { data += 12345; }; %>
+      <li><%= data %></li>
+  </script>
+
+</body>
+</html>

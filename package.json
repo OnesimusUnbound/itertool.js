@@ -1,0 +1,11 @@
+{
+  "name"          : "itertools.js",
+  "description"   : "JavaScript's iteration helper library based on Python's itertools",
+  "homepage"      : "",
+  "keywords"      : ["util", "iterator", "server", "client", "browser"],
+  "author"        : "OnesimusUnbound <marcelino.deseo@gmail.com>",
+  "contributors"  : [],
+  "repository"    : {"type": "git", "url": "git://github.com/OnesimusUnbound/underscore.itertools"},
+  "main"          : "itertools.js",
+  "version"       : "0.0.1"
+}
