@@ -142,7 +142,6 @@ $(document).ready(function() {
                 'compress test for array');
     }
     
-    
     gen = itertool.compress({"a": 12, "p": "Testing", "o": -54, "g": "@" }, ["", null, "A", new Object()]); items = [];
     try {
         for(i = 0; i < 100; i++)
@@ -154,6 +153,33 @@ $(document).ready(function() {
                 items.join(' '), 
                 '-54 @', 
                 'compress test for object');
+    }
+    
+    gen = itertool.compress("ABCDE", [1, 0, 1]); items = [];
+    try {
+        for(i = 0; i < 100; i++)
+            items.push(gen.next());
+            
+    } catch (err) {
+        if (err === StopIteration)
+            equals(
+                items.join(' '), 
+                'A C', 
+                'length of data > length of selector');
+    }
+    
+    
+    gen = itertool.compress("ZYX", [1, 0, 1, 1, 0]); items = [];
+    try {
+        for(i = 0; i < 100; i++)
+            items.push(gen.next());
+            
+    } catch (err) {
+        if (err === StopIteration)
+            equals(
+                items.join(' '), 
+                'Z X', 
+                'length of data < length of selector');
     }
     
     raises(
