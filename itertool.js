@@ -34,6 +34,16 @@
             return obj;
         },
         
+        __map = function(items, callback){
+            var result = [];
+            
+            for (var i = 0; i < items.length; i++){
+                result[i] = callback(items[i]);
+            }
+            
+            return result;
+        };
+        
         __slice = ArrayProto.slice;
     
     var root = this; 
@@ -258,6 +268,99 @@
                 iterData.next();
             }
             return iterData.next();
+        });
+    };
+    
+    itertool.dropwhile = function(iterable, predicate) {
+        if (typeof predicate !== 'function') throw new TypeError;
+        
+        iterable = toIterator(iterable);
+        var firstValid,
+            gen = extendIterator(function(){
+                while(predicate(firstValid = iterable.next()));
+                gen.next = function(){
+                    return iterable.next();
+                };
+                return firstValid;
+            });
+        
+        return gen;
+    };
+    
+    itertool.takewhile = function(iterable, predicate) {
+        if (typeof predicate !== 'function') throw new TypeError;
+        
+        iterable = toIterator(iterable);
+        var takenItem,
+            gen = extendIterator(function(){
+                if (predicate(takenItem = iterable.next()))
+                    return takenItem;
+                gen.next = function(){
+                    throw StopIteration;
+                };
+                throw StopIteration;
+            });
+        
+        return gen;
+    };
+    
+    itertool.ifilter = function(iterable, predicate) {
+        predicate = predicate || function(item){ return !!item; };
+        if (typeof predicate !== 'function') throw new TypeError;
+        
+        iterable = toIterator(iterable);
+        var validItem;
+        
+        return extendIterator(function(){
+            while(!predicate(validItem = iterable.next()));
+            return validItem;
+        });
+    };
+    
+    itertool.ifilterfalse = function(iterable, predicate) {
+        predicate = predicate || function(item){ return !!item; };
+        if (typeof predicate !== 'function') throw new TypeError;
+        
+        iterable = toIterator(iterable);
+        var validItem;
+        
+        return extendIterator(function(){
+            while(predicate(validItem = iterable.next()));
+            return validItem;
+        });
+    };
+    
+    itertool.imap = function(iterable, closure) {
+        if (typeof closure !== 'function') throw new TypeError;
+        
+        iterable = toIterator(iterable);
+        
+        return extendIterator(function(){
+            return closure(iterable.next());
+        });
+    };
+    
+    itertool.izip = function() {
+        var iterables = __slice.call(arguments),
+            size = iterables.length;
+        
+        for (var idx = 0; idx < iterables.length; idx++) {
+            var type = __type(iterables[idx]);
+            
+            if (type === 'Number' || type === 'RegExp') 
+                throw new TypeError;
+                
+            iterables[idx] = toIterator(iterables[idx]);
+        }
+            
+        return extendIterator(function(){
+            var returnItem = [];
+            
+            for(var i = 0; i < size; i++){
+                returnItem[i] = iterables[idx].next();
+            }
+            
+            return returnItem;
         });
     };
     

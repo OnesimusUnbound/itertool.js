@@ -187,4 +187,166 @@ $(document).ready(function() {
         function(actual){ return actual === StopIteration; },
         'raises StopIteration')
   });
+  
+  test("terminating: dropwhile", function() {
+    var items, gen, itemCount;
+    
+    gen = itertool.dropwhile([1, 2, 4, 6, 1, 2], function(item){ return item < 5; }); items = [];
+    try {
+        for(i = 0; i < 100; i++)
+            items.push(gen.next());
+            
+    } catch (err) {
+        if (err === StopIteration)
+            equals(
+                items.join(' '), 
+                '6 1 2', 
+                'droping first items that do not meet requirement');
+    }
+    
+    gen = itertool.dropwhile([1, 2, 4, 6, 1, 2], function(item){ return item < 100; }); items = [];
+    raises(
+        function(){ gen.next(); }, 
+        function(actual){ return actual === StopIteration; },
+        'raises StopIteration');
+        
+    raises(
+        function(){ itertool.dropwhile([1, 2, 4, 6, 1, 2], {}); }, 
+        TypeError,
+        'raises TypeError for predicate parameter other than function');
+    
+  });
+  
+  test("terminating: takewhile", function() {
+    var items, gen, itemCount;
+    
+    gen = itertool.takewhile([1, 2, 4, 6, 1, 2], function(item){ return item < 5; }); items = [];
+    try {
+        for(i = 0; i < 100; i++)
+            items.push(gen.next());
+            
+    } catch (err) {
+        if (err === StopIteration)
+            equals(
+                items.join(' '), 
+                '1 2 4', 
+                'droping first items that do not meet requirement');
+    }
+    
+    gen = itertool.takewhile([1, 2, 4, 6, 1, 2], function(item){ return item > 100; }); items = [];
+    raises(
+        function(){ gen.next(); }, 
+        function(actual){ return actual === StopIteration; },
+        'raises StopIteration');
+        
+    raises(
+        function(){ itertool.takewhile([1, 2, 4, 6, 1, 2], {}); }, 
+        TypeError,
+        'raises TypeError for predicate parameter other than function');
+    
+  });
+  
+  test("terminating: ifilter", function() {
+    var items, gen, itemCount;
+    
+    gen = itertool.ifilter([1, 2, 4, 6, 1, 2], function(item){ return item % 2 == 0; }); items = [];
+    try {
+        for(i = 0; i < 100; i++)
+            items.push(gen.next());
+            
+    } catch (err) {
+        if (err === StopIteration)
+            equals(
+                items.join(' '), 
+                '2 4 6 2', 
+                'returning even numbers');
+    }
+    
+    gen = itertool.ifilter([0, null, 1, "A"]); items = [];
+    try {
+        for(i = 0; i < 100; i++)
+            items.push(gen.next());
+            
+    } catch (err) {
+        if (err === StopIteration)
+            equals(
+                items.join(' '), 
+                '1 A', 
+                'returning entries that returns true when evaluated in boolean');
+    }
+    
+    gen = itertool.ifilter([1, 2, 4, 6, 1, 2], function(item){ return item > 100; }); items = [];
+    raises(
+        function(){ gen.next(); }, 
+        function(actual){ return actual === StopIteration; },
+        'raises StopIteration');
+        
+    raises(
+        function(){ itertool.ifilter([1, 2, 4, 6, 1, 2], {}); }, 
+        TypeError,
+        'raises TypeError for predicate parameter other than function');
+  });
+  
+  test("terminating: ifilterfalse", function() {
+    var items, gen, itemCount;
+    
+    gen = itertool.ifilterfalse([1, 3, 2, 4, 7, 6], function(item){ return item % 2 == 0; }); items = [];
+    try {
+        for(i = 0; i < 100; i++)
+            items.push(gen.next());
+            
+    } catch (err) {
+        if (err === StopIteration)
+            equals(
+                items.join(' '), 
+                '1 3 7', 
+                'returning even numbers');
+    }
+    
+    gen = itertool.ifilterfalse([0, 0, 1, "A"]); items = [];
+    try {
+        for(i = 0; i < 100; i++)
+            items.push(gen.next());
+            
+    } catch (err) {
+        if (err === StopIteration)
+            equals(
+                items.join(' '), 
+                '0 0', 
+                'returning entries that returns true when evaluated in boolean');
+    }
+    
+    gen = itertool.ifilterfalse([1, 2, 4, 6, 1, 2], function(item){ return item < 100; }); items = [];
+    raises(
+        function(){ gen.next(); }, 
+        function(actual){ return actual === StopIteration; },
+        'raises StopIteration');
+        
+    raises(
+        function(){ itertool.ifilterfalse([1, 2, 4, 6, 1, 2], {}); }, 
+        TypeError,
+        'raises TypeError for predicate parameter other than function');
+  });
+  
+  test("terminating: imap", function() {
+    var items, gen, itemCount;
+    
+    gen = itertool.imap([1, 2, 4, 7, 3, 9], function(item){ return item * item; }); items = [];
+    try {
+        for(i = 0; i < 100; i++)
+            items.push(gen.next());
+            
+    } catch (err) {
+        if (err === StopIteration)
+            equals(
+                items.join(' '), 
+                '1 4 16 49 9 81', 
+                'returning square of numbers');
+    }
+    
+    raises(
+        function(){ itertool.imap([1, 2, 4, 6, 1, 2], {}); }, 
+        TypeError,
+        'raises TypeError for closure parameter other than function');
+  });
 });
