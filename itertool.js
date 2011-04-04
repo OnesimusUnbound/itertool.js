@@ -370,6 +370,27 @@
             return callback.apply(root, args);
         });
     };
+        
+    itertool.islice = function(iterable, start, stop, step) {
+        if (arguments.length <= 1) {
+            stop = start || 0;
+            start = 0;
+        }
+        step = step || 1;
+        iterable = toIterator(iterable);
+        var iterRange = itertool.irange(start, stop, step),
+            validIdx = iterRange.next(),
+            idx = 0;
+            
+        return extendIterator(function(){
+            while (idx < validIdx) {
+                iterable.next();
+                idx++;
+            }
+            validIdx = iterRange.next();
+            return iterable.next();
+        });
+    };
     
     itertool.izip = function() {
         var iterables = __slice.call(arguments),
