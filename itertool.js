@@ -1,7 +1,7 @@
-// itertools.js
+// itertool.js
 // (c) 2011 OnesimusUnbound <marcelino dat deseo aet gmail dat com>
 // itertools.js is freely distributable under the terms of the MIT license.
-// Documentation: https://github.com/OnesimusUnbound/itertools.js
+// Documentation: https://github.com/OnesimusUnbound/itertool.js
 
 // Version 0.0.1
 
