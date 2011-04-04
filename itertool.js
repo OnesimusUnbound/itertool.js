@@ -371,23 +371,19 @@
         });
     };
         
-    itertool.islice = function(iterable, start, stop, step) {
-        if (arguments.length <= 1) {
-            stop = start || 0;
-            start = 0;
-        }
-        step = step || 1;
+    itertool.islice = function(iterable) {
         iterable = toIterator(iterable);
-        var iterRange = itertool.irange(start, stop, step),
-            validIdx = iterRange.next(),
+        var iterRange = itertool.irange.apply(root, __slice.call(arguments, 1)),
+            validIdx,
             idx = 0;
             
         return extendIterator(function(){
-            while (idx < validIdx) {
+            validIdx = iterRange.next();
+            while (idx  !== validIdx) {
                 iterable.next();
                 idx++;
             }
-            validIdx = iterRange.next();
+            idx++;
             return iterable.next();
         });
     };
