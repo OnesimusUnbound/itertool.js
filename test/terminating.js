@@ -390,17 +390,47 @@ $(document).ready(function() {
             items.push(gen.next());
             
     } catch (err) {
-        if (err === StopIteration)
+        if (err === StopIteration) {
             equals(
                 _.map(items, function(zippedItem){
                     return '[' + zippedItem.join(' ') + ']';
                 }).join(', '),
                 '[1 1], [2 3], [4 5], [7 5], [3 7]', 
                 'zipped items, removing an item that do not have matching zip');
+        } else {
+            ok(false, "Only StopIteration should be raised. Raised " + err);
+        }
     }
     
     raises(
         function(){ itertool.izip().next(); }, 
+        function(actual){ return actual === StopIteration; },
+        'raises StopIteration for empty arguments');
+  });
+  
+  test("terminating: izip_longest", function() {
+    var items, gen, itemCount;
+    
+    gen = itertool.izip_longest("-", [1, 2, 4, 7], [1, 3, 5, 5, 7, 4], "ABD"); items = [];
+    try {
+        for(i = 0; i < 100; i++)
+            items.push(gen.next());
+            
+    } catch (err) {
+        if (err === StopIteration) {
+            equals(
+                _.map(items, function(zippedItem){
+                    return '[' + zippedItem.join(' ') + ']';
+                }).join(', '),
+                '[1 1 A], [2 3 B], [4 5 D], [7 5 -], [- 7 -], [- 4 -]', 
+                'zipped items, filling the empty slot with fillvalue');
+        } else {
+            ok(false, "Only StopIteration should be raised. Raised " + err);
+        }
+    }
+    
+    raises(
+        function(){ itertool.izip_longest().next(); }, 
         function(actual){ return actual === StopIteration; },
         'raises StopIteration for empty arguments');
   });

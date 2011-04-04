@@ -394,6 +394,43 @@
         });
     };
     
+    itertool.izip_longest = function() {
+        var iterables = __slice.call(arguments, 1),
+            fillvalue = arguments[0] || "";
+            numIterables = iterables.length;
+            
+        iterables = __map(iterables, function(iterable){
+            var type = __type(iterable);
+            
+            if (type === 'Number' || type === 'RegExp') 
+                throw new TypeError;
+                
+            return toIterator(iterable);
+        });
+            
+        return extendIterator(function(){
+            var numEndedIter = 0;
+            if (numIterables > 0)
+                result = __map(iterables, function(iterable){
+                    try {
+                        return iterable.next();
+                    } catch(err) {
+                        if (err === StopIteration) {
+                            if (numEndedIter < numIterables) {
+                                numEndedIter++;
+                                return fillvalue;
+                            }
+                        }
+                    }
+                });
+                
+            if (numEndedIter < numIterables)
+                return result;
+                
+            throw StopIteration;
+        });
+    };
+    
     itertool.noConflict = function() {
         root.itertool = __previous_itertool;
         return this;
