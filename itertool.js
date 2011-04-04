@@ -42,7 +42,7 @@
             }
             
             return result;
-        };
+        },
         
         __slice = ArrayProto.slice;
     
@@ -148,8 +148,7 @@
     itertool.cycle = function(obj){
         var type = __type(obj);
         
-        if (type === 'Number' || type === 'RegExp' 
-            || (obj.length && obj.length === 0))
+        if (type === 'Number' || type === 'RegExp' || type === 'Null')
             throw new TypeError;
     
         var iter = toIterator(obj),
@@ -205,27 +204,26 @@
     itertool.chain = function(){
         var iterables = __slice.call(arguments),
             concatIters = [], 
-            size, concatIdx = 0, currentIter;
+            size, iterIdx = 0, currentIter;
             
-        for (var idx = 0; idx < iterables.length; idx++){
-            var iterable, type = __type(iterables[idx]);
-            
+        iterables = __map(iterables, function(iterable){
+            var type = __type(iterable);
             if (type === 'Number' || type === 'RegExp') 
                 throw new TypeError;
                 
-            concatIters.push(toIterator(iterables[idx]))
-        }
+            return toIterator(iterable)
+        });
             
-        size = concatIters.length;
-        currentIter = concatIters[concatIdx++];
+        size = iterables.length;
+        currentIter = iterables[iterIdx++];
         
         gen = extendIterator(function(){
             try {
                 return currentIter.next();
             } catch (err) {
                 if (err === StopIteration) {
-                    if (size > concatIdx) {
-                        currentIter = concatIters[concatIdx++];
+                    if (size > iterIdx) {
+                        currentIter = iterables[iterIdx++];
                         return gen.next();
                     }
                     throw StopIteration;
@@ -271,7 +269,7 @@
         });
     };
     
-    itertool.dropwhile = function(iterable, predicate) {
+    itertool.dropwhile = function(predicate, iterable) {
         if (typeof predicate !== 'function') throw new TypeError;
         
         iterable = toIterator(iterable);
@@ -287,7 +285,7 @@
         return gen;
     };
     
-    itertool.takewhile = function(iterable, predicate) {
+    itertool.takewhile = function(predicate, iterable) {
         if (typeof predicate !== 'function') throw new TypeError;
         
         iterable = toIterator(iterable);
@@ -295,18 +293,26 @@
             gen = extendIterator(function(){
                 if (predicate(takenItem = iterable.next()))
                     return takenItem;
-                gen.next = function(){
-                    throw StopIteration;
-                };
+                
                 throw StopIteration;
             });
         
         return gen;
     };
     
-    itertool.ifilter = function(iterable, predicate) {
-        predicate = predicate || function(item){ return !!item; };
-        if (typeof predicate !== 'function') throw new TypeError;
+    itertool.ifilter = function() {
+        var iterable, predicate;
+        
+        if (arguments.length === 2) {
+            iterable = arguments[1];
+            predicate = arguments[0];
+            if (typeof predicate !== 'function') throw new TypeError;
+            
+        } else if (arguments.length === 1) {
+            iterable = arguments[0];
+            predicate = function(item){ return !!item; };
+            
+        }
         
         iterable = toIterator(iterable);
         var validItem;
@@ -317,9 +323,19 @@
         });
     };
     
-    itertool.ifilterfalse = function(iterable, predicate) {
-        predicate = predicate || function(item){ return !!item; };
-        if (typeof predicate !== 'function') throw new TypeError;
+    itertool.ifilterfalse = function() {
+        var iterable, predicate;
+        
+        if (arguments.length === 2) {
+            iterable = arguments[1];
+            predicate = arguments[0];
+            if (typeof predicate !== 'function') throw new TypeError;
+            
+        } else if (arguments.length === 1) {
+            iterable = arguments[0];
+            predicate = function(item){ return !!item; };
+            
+        }
         
         iterable = toIterator(iterable);
         var validItem;
@@ -330,37 +346,51 @@
         });
     };
     
-    itertool.imap = function(iterable, closure) {
-        if (typeof closure !== 'function') throw new TypeError;
+    itertool.imap = function() {
+        var callback = arguments[0],
+            iterables = __slice.call(arguments, 1),
+            size = iterables.length;
         
-        iterable = toIterator(iterable);
+        if (typeof callback !== 'function') throw new TypeError;
         
+        iterables = __map(iterables, function(iterable){
+            var type = __type(iterable);
+            
+            if (type === 'Number' || type === 'RegExp') 
+                throw new TypeError;
+                
+            return toIterator(iterable);
+        });
+            
         return extendIterator(function(){
-            return closure(iterable.next());
+            var args = __map(iterables, function(iterable){ 
+                return iterable.next(); 
+            });
+            
+            return callback.apply(root, args);
         });
     };
     
     itertool.izip = function() {
         var iterables = __slice.call(arguments),
             size = iterables.length;
-        
-        for (var idx = 0; idx < iterables.length; idx++) {
-            var type = __type(iterables[idx]);
+            
+        iterables = __map(iterables, function(iterable){
+            var type = __type(iterable);
             
             if (type === 'Number' || type === 'RegExp') 
                 throw new TypeError;
                 
-            iterables[idx] = toIterator(iterables[idx]);
-        }
+            return toIterator(iterable);
+        });
             
         return extendIterator(function(){
-            var returnItem = [];
-            
-            for(var i = 0; i < size; i++){
-                returnItem[i] = iterables[idx].next();
-            }
-            
-            return returnItem;
+            if (size > 0)
+                return __map(iterables, function(iterable){
+                    return iterable.next();
+                });
+                
+            throw StopIteration;
         });
     };
     
