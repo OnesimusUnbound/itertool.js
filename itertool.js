@@ -370,16 +370,6 @@
             return callback.apply(root, args);
         });
     };
-    
-    itertool.starmap = function(callback, argList) {
-        if (typeof callback !== 'function') throw new TypeError;
-        
-        var iterable = toIterator(argList);
-            
-        return extendIterator(function(){
-            return callback.apply(root, iterable.next());
-        });
-    };
         
     itertool.islice = function(iterable) {
         iterable = toIterator(iterable);
@@ -459,6 +449,28 @@
                 
             throw StopIteration;
         });
+    };
+    
+    itertool.tee = function(iterable, n) {
+        n = n || 2;
+        iterable = toIterator(iterable);
+        var queue = [],
+            teeItrables = [];
+            
+        for(var idx = 0; idx < n; n++) {
+            teeItrables.push((function(){
+                idx = 0;
+                
+                return extendIterator(function(){
+                    if (idx >= queue.length) 
+                        queue.push(iterable.next());
+                    
+                    return queue[idx++];
+                });
+            })());
+        }
+        
+        return teeItrables;
     };
     
     itertool.noConflict = function() {
