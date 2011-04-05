@@ -1,6 +1,6 @@
 Infinite
 ========
-count
+counter (Python's count)
 cycle
 repeat
 
@@ -14,3 +14,6 @@ ifilter
 ifilterfalse
 imap
 izip
+izip_longest
+irange
+islice
