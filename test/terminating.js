@@ -419,6 +419,47 @@ $(document).ready(function() {
         'raises TypeError for predicate parameter other than function');
   });
   
+  test("terminating: starmap", function() {
+    var items, gen, itemCount;
+    
+    gen = itertool.starmap(function(item){ return item * item; }, [[1], [2], [4], [7], [3], [9]]); items = [];
+    try {
+        for(i = 0; i < 100; i++)
+            items.push(gen.next());
+            
+    } catch (err) {
+        if (err === StopIteration) {
+            equals(
+                items.join(' '), 
+                '1 4 16 49 9 81', 
+                'returning square of numbers');
+        } else {
+            ok(false, "Only StopIteration should be raised. Raised " + err);
+        }
+    }
+    
+    gen = itertool.starmap(Math.pow, [[1, 2], [3, 4], [2, 3], [2, 5]]); items = [];
+    try {
+        for(i = 0; i < 100; i++)
+            items.push(gen.next());
+            
+    } catch (err) {
+        if (err === StopIteration) {
+            equals(
+                items.join(' '), 
+                '1 81 8 32', 
+                'returning Math.pow for each parameters in iterables');
+        } else {
+            ok(false, "Only StopIteration should be raised. Raised " + err);
+        }
+    }
+    
+    raises(
+        function(){ itertool.starmap({}, [1, 2, 4, 6, 1, 2]); }, 
+        TypeError,
+        'raises TypeError for closure parameter other than function');
+  });
+  
   test("terminating: imap", function() {
     var items, gen, itemCount;
     
