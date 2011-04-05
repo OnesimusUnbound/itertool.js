@@ -136,50 +136,55 @@ $(document).ready(function() {
             
     } catch(err) {
         if (err === StopIteration) {
-            equals(items.join(' '), 'A B C D', 'islice with a single positive argument generates an array of items in iterable whose index is 0,1,2,...,n-1');
+            equals(items.join(' '), 'A B C D', 
+                'islice with a single positive argument generates an array of items in iterable whose index is 0,1,2,...,n-1');
         } else {
             ok(false, "Only StopIteration should be raised. Raised " + err);
         }
     }
     
-    gen = itertool.islice(5, 8); items = [];
+    gen = itertool.islice("ABCDEFGHIJK", 5, 8); items = [];
     try {
         for(i = 0; i < 100; i++)
             items.push(gen.next());
             
     } catch(err) {
         if (err === StopIteration)
-            equals(items.join(' '), 'E F G', 'islice with two arguments a & b, a < b generates an array of items in iterable whose index a,a+1,a+2,...,b-2,b-1');
+            equals(items.join(' '), 'F G H', 
+                'islice with two arguments a & b, a < b generates an array of items in iterable whose index a,a+1,a+2,...,b-2,b-1');
     }
     
-    gen = itertool.islice(3, 10, 3); items = [];
+    gen = itertool.islice("ABCDEFGHIJK", 3, 10, 3); items = [];
     try {
         for(i = 0; i < 100; i++)
             items.push(gen.next());
             
     } catch (err) {
         if (err === StopIteration)
-            equals(items.join(' '), 'C F I', 'range with three arguments a & b & c, c < b-a, a < b generates an array of items in iterable whose index a,a+c,a+2c,...,b - (multiplier of a) &lt; c');
+            equals(items.join(' '), 'D G J', 
+                'range with three arguments a & b & c, c < b-a, a < b generates an array of items in iterable whose index a,a+c,a+2c,...,b - (multiplier of a) &lt; c');
     }
     
-    gen = itertool.islice(3, 10, 15); items = [];
+    gen = itertool.islice("ABCDEFGHIJK", 3, 10, 15); items = [];
     try {
         for(i = 0; i < 100; i++)
             items.push(gen.next());
             
     } catch (err) {
         if (err === StopIteration)
-            equals(items.join(' '), 'C', 'islice with three arguments a & b & c, c > b-a, a < b generates an array with a single element, equal to a');
+            equals(items.join(' '), 'D', 
+                'islice with three arguments a & b & c, c > b-a, a < b generates an array with a single element, equal to a');
     }
     
-    gen = itertool.islice(3, 15, 2); items = [];
+    gen = itertool.islice("ABCDEFGHIJK", 3, 15, 2); items = [];
     try {
         for(i = 0; i < 100; i++)
             items.push(gen.next());
             
     } catch (err) {
         if (err === StopIteration)
-            equals(items.join(' '), 'C E G I', 'islice with three arguments a &amp; b &amp; c, c &gt; b-a, a &lt; b generates an array with a single element, equal to a');
+            equals(items.join(' '), 'D F H J', 
+                'islice with three arguments a &amp; b &amp; c, c &gt; b-a, a &lt; b generates an array with a single element, equal to a');
     }
     
     raises(

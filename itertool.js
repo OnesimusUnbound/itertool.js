@@ -66,7 +66,7 @@
         return __extend(new Iterator, {next: nextImpl});
     };
     
-    itertool.ArrayIterator = ArrayIterator = function(array) {
+    var ArrayIterator = itertool.ArrayIterator = function(array) {
         if(__type(array) === 'Undefined') throw new TypeError;
     
         var size = array.length,
@@ -81,7 +81,7 @@
         });
     };
     
-    itertool.StringIterator = StringIterator = function(string, option){
+    var StringIterator = itertool.StringIterator = function(string, option){
         if(__type(string) === 'Undefined') throw new TypeError;
         
         var items = [];
@@ -97,7 +97,7 @@
         return ArrayIterator(items);
     }
     
-    itertool.ObjectIterator = ObjectIterator = function(obj, option) {
+    var ObjectIterator = itertool.ObjectIterator = function(obj, option) {
         if(__type(obj) === 'Undefined') throw new TypeError;
     
         var items = [];
@@ -114,7 +114,7 @@
         return ArrayIterator(items);
     };
     
-    itertool.toIterator = toIterator = function(obj){
+    var toIterator = itertool.toIterator = function(obj){
         switch(__type(obj)){
             case 'String':
                 return StringIterator.apply(root, arguments);
@@ -375,16 +375,19 @@
         iterable = toIterator(iterable);
         var iterRange = itertool.irange.apply(root, __slice.call(arguments, 1)),
             validIdx,
-            idx = 0;
+            idx = -1;
             
         return extendIterator(function(){
+            var item;
+            
             validIdx = iterRange.next();
-            while (idx  !== validIdx) {
-                iterable.next();
+            while (true) {
+                item = iterable.next();
                 idx++;
+                if (idx === validIdx) {
+                    return item;
+                }
             }
-            idx++;
-            return iterable.next();
         });
     };
     
@@ -454,10 +457,12 @@
     };
     
     // CommonJS module is defined
-    if (typeof window === 'undefined' && typeof module !== 'undefined') {
-        // Export module
+    if (typeof module !== 'undefined' && module.exports) {
         module.exports = itertool;
 
+    } else if (typeof exports !== 'undefined') {
+        exports = itertool;
+        
     } else {
         root.itertool = itertool;
     }
