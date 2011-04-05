@@ -1,22 +1,24 @@
 In Progress
 ===========
-    starmap
+    tee
+    groupby
 
 Completed
 =========
-    Infinite
-    ========
-    counter (Python's count)
-    cycle
-    repeat
+Infinite
+========
+- counter (Python's count)
+- cycle
+- repeat
 
-    Terminating
-    ===========
-    chain
-    compress
-    dropwhile
-    takewhile
-    ifilter
-    ifilterfalse
-    imap
-    izip
+Terminating
+===========
+- chain
+- compress
+- dropwhile
+- takewhile
+- ifilter
+- ifilterfalse
+- imap
+- izip
+- starmap
