@@ -1,0 +1,22 @@
+In Progress
+===========
+    starmap
+
+Completed
+=========
+    Infinite
+    ========
+    count
+    cycle
+    repeat
+
+    Terminating
+    ===========
+    chain
+    compress
+    dropwhile
+    takewhile
+    ifilter
+    ifilterfalse
+    imap
+    izip
