@@ -440,6 +440,8 @@
                                 numEndedIter++;
                                 return fillvalue;
                             }
+                        } else {
+                            throw err;
                         }
                     }
                 });
@@ -451,26 +453,64 @@
         });
     };
     
+    itertool.starmap = function(callback, argList) {
+        if (typeof callback !== 'function') throw new TypeError;
+        
+        var iterable = toIterator(argList);
+            
+        return extendIterator(function(){
+            return callback.apply(root, iterable.next());
+        });
+    };
+    
     itertool.tee = function(iterable, n) {
         n = n || 2;
         iterable = toIterator(iterable);
+        
         var queue = [],
-            teeItrables = [];
-            
-        for(var idx = 0; idx < n; n++) {
-            teeItrables.push((function(){
-                idx = 0;
-                
+            teeItrables = [], 
+            gen = function(idx){
                 return extendIterator(function(){
                     if (idx >= queue.length) 
                         queue.push(iterable.next());
                     
                     return queue[idx++];
                 });
-            })());
+            };
+            
+        for(var i = 0; i < n; i++) {
+            teeItrables.push(gen(0));
         }
         
         return teeItrables;
+    };
+    
+    itertool.groupby = function(iterable, key) {
+        var keyfunc = key || function(x){ return x; },
+            tgtkey, currkey, currvalue, grouper;
+        
+        iterable = toIterable(iterable);
+        tgtkey = currkey = currvalue = {};
+        
+        grouper = function(ptgtkey){
+            return extendIterator(function(){
+                if (currkey === ptgtkey) {
+                    return val
+                }
+            });
+        };
+        
+        return extendIterator(function(){
+            if (currkey == tgtkey) {
+                currvalue = iterable.next();
+                currkey = keyfunc(currvalue);
+            }
+            tgtkey = currkey;
+            return [currkey, ];
+        });
+        
+        
+        
     };
     
     itertool.noConflict = function() {
