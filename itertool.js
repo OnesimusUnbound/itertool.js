@@ -11,7 +11,7 @@
     var ObjectProto = Object.prototype,
         ArrayProto = Array.prototype;
         
-    var __owns = ObjectProto.hasOwnProperty,
+    var __hasOwns = ObjectProto.hasOwnProperty,
     
         __type = function(obj){
             if (typeof obj === 'undefined') {
@@ -27,7 +27,7 @@
         
         __extend = function(obj, other){
             for (var prop in other){
-                if (__owns.call(other, prop)) {
+                if (__hasOwns.call(other, prop)) {
                     obj[prop] = other[prop];
                 }
             }
@@ -46,9 +46,9 @@
         
         __slice = ArrayProto.slice;
     
-    var root = this; 
-    var __previous_itertool = root.itertool;
-    var itertool = {};
+    var root = this, 
+        __previous_itertool = root.itertool, 
+        itertool = {};
         
     var StopIteration;
     if (!root.StopIteration) {
@@ -102,7 +102,7 @@
     
         var items = [];
         for (var key in obj){
-            if (__owns.call(obj, key)){
+            if (__hasOwns.call(obj, key)){
                 switch(option){
                     case 'keys' : items.push(key); break;
                     case 'all'  : items.push([key, obj[key]]); break;
@@ -270,7 +270,7 @@
     };
     
     itertool.dropwhile = function(predicate, iterable) {
-        if (typeof predicate !== 'function') throw new TypeError;
+        if (__type(predicate) !== 'Function') throw new TypeError;
         
         iterable = toIterator(iterable);
         var firstValid,
@@ -286,7 +286,7 @@
     };
     
     itertool.takewhile = function(predicate, iterable) {
-        if (typeof predicate !== 'function') throw new TypeError;
+        if (__type(predicate) !== 'Function') throw new TypeError;
         
         iterable = toIterator(iterable);
         var takenItem,
@@ -329,7 +329,7 @@
         if (arguments.length === 2) {
             iterable = arguments[1];
             predicate = arguments[0];
-            if (typeof predicate !== 'function') throw new TypeError;
+            if (__type(predicate) !== 'Function') throw new TypeError;
             
         } else if (arguments.length === 1) {
             iterable = arguments[0];
@@ -351,7 +351,7 @@
             iterables = __slice.call(arguments, 1),
             size = iterables.length;
         
-        if (typeof callback !== 'function') throw new TypeError;
+        if (__type(callback) !== 'Function') throw new TypeError;
         
         iterables = __map(iterables, function(iterable){
             var type = __type(iterable);
@@ -454,7 +454,7 @@
     };
     
     itertool.starmap = function(callback, argList) {
-        if (typeof callback !== 'function') throw new TypeError;
+        if (__type(callback) !== 'Function') throw new TypeError;
         
         var iterable = toIterator(argList);
             
@@ -489,14 +489,21 @@
         var keyfunc = key || function(x){ return x; },
             tgtkey, currkey, currvalue, grouper;
         
-        iterable = toIterable(iterable);
+        iterable = toIterator(iterable);
         tgtkey = currkey = currvalue = {};
         
         grouper = function(ptgtkey){
             return extendIterator(function(){
+                var retvalue; 
                 if (currkey === ptgtkey) {
-                    return val
-                }
+                    retvalue = currvalue;
+                    currvalue = iterable.next();
+                    currkey = keyfunc(currvalue);
+                    
+                    return retvalue;
+                } 
+                
+                throw StopIteration;
             });
         };
         
@@ -506,7 +513,7 @@
                 currkey = keyfunc(currvalue);
             }
             tgtkey = currkey;
-            return [currkey, ];
+            return [currkey, grouper(tgtkey)];
         });
         
         
