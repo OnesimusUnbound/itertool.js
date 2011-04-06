@@ -117,17 +117,10 @@
     
     var toIterator = itertool.toIterator = function(obj){
         switch(__type(obj)){
-            case 'String':
-                return StringIterator.apply(root, arguments);
-        
-            case 'Array':
-                return ArrayIterator.apply(root, arguments);
-                
-            case 'Iterator':
-                return obj;
-                
-            default:
-                return ObjectIterator.apply(root, arguments);
+            case 'String':      return StringIterator.apply(root, arguments);
+            case 'Array':       return ArrayIterator.apply(root, arguments);
+            case 'Iterator':    return obj;
+            default:            return ObjectIterator.apply(root, arguments);
         }
     };
     
@@ -135,9 +128,8 @@
         var array = [];
         
         try {
-            while (true) {
-                array.push(iterable.next());
-            }
+            while (true) array.push(iterable.next());
+            
         } catch(err) {
             if (err !== StopIteration) throw err;
             return array;
