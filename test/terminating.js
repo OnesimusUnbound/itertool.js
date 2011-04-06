@@ -554,4 +554,51 @@ $(document).ready(function() {
         function(actual){ return actual === StopIteration; },
         'raises StopIteration for empty arguments');
   });
+  
+  test("terminating: tee", function() {
+    var items, gen, itemCount;
+    
+    iterators = itertool.tee([1, 2]); items = [];
+    items.push(iterators[0].next());
+    items.push(iterators[1].next());
+    items.push(iterators[1].next());
+    items.push(iterators[0].next());
+    
+    equals(iterators.length, 
+            2, 
+            'uses two tee iterators by default if number of iterator is not specified');
+    
+    iterators = itertool.tee([1, "A", 7, 4], 3); items = [];
+    items.push(iterators[0].next());
+    items.push(iterators[0].next());
+    items.push(iterators[1].next());
+    items.push(iterators[1].next());
+    items.push(iterators[1].next());
+    items.push(iterators[2].next());
+    items.push(iterators[0].next());
+    items.push(iterators[2].next());
+    items.push(iterators[1].next());
+    items.push(iterators[0].next());
+    items.push(iterators[2].next());
+    items.push(iterators[2].next());
+    
+    equals(items.join(' '), 
+            '1 A 1 A 7 1 7 A 4 4 7 4', 
+            'the three tee iterators are not exhuasted until they ended');
+    
+    raises(
+        function(){ iterators[0].next(); }, 
+        function(actual){ return actual === StopIteration; },
+        'raises StopIteration for ended tee 0');
+            
+    raises(
+        function(){ iterators[1].next(); }, 
+        function(actual){ return actual === StopIteration; },
+        'raises StopIteration for ended tee 1');
+        
+    raises(
+        function(){ iterators[2].next(); }, 
+        function(actual){ return actual === StopIteration; },
+        'raises StopIteration for ended tee 2');
+  });
 });

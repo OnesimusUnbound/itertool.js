@@ -130,11 +130,27 @@
         }
     };
     
+    var toArray = itertool.toArray = function(iterable){
+        var array = [];
+        
+        try {
+            while (true) {
+                array.push(iterable.next());
+            }
+        } catch(err) {
+            if (err === StopIteration) {
+                return array;
+            } else {
+                throw err;
+            }
+        }
+    };
+    
     // Infinite Iterators
     // ==================
     
     // counter
-    itertool.counter = function(start, step){
+    var counter = itertool.counter = function(start, step){
         start = start || 0;
         step  = step  || 1;
         start -= step;
@@ -145,7 +161,7 @@
     };
     
     // cycle
-    itertool.cycle = function(obj){
+    var cycle = itertool.cycle = function(obj){
         var type = __type(obj);
         
         if (type === 'Number' || type === 'RegExp' || type === 'Null')
@@ -181,7 +197,7 @@
     };
     
     // repeat
-    itertool.repeat = function(element, n){
+    var repeat = itertool.repeat = function(element, n){
         var count = 0;
             
         return extendIterator(n !== void 0 
@@ -201,7 +217,7 @@
     // Terminating Iterators
     // =====================
     // chain
-    itertool.chain = function(){
+    var chain = itertool.chain = function(){
         var iterables = __slice.call(arguments),
             concatIters = [], 
             size, iterIdx = 0, currentIter;
@@ -237,7 +253,7 @@
     };
     
     // irange
-    itertool.irange = function(start, stop, step) {
+    var irange = itertool.irange = function(start, stop, step) {
         if (arguments.length <= 1) {
             stop = start || 0;
             start = 0;
@@ -257,7 +273,7 @@
         });
     };
     
-    itertool.compress = function(data, selectors) {
+    var compress = itertool.compress = function(data, selectors) {
         var iterData = toIterator(data),
             iterSelector = toIterator(selectors);
             
@@ -269,7 +285,7 @@
         });
     };
     
-    itertool.dropwhile = function(predicate, iterable) {
+    var dropwhile = itertool.dropwhile = function(predicate, iterable) {
         if (__type(predicate) !== 'Function') throw new TypeError;
         
         iterable = toIterator(iterable);
@@ -285,7 +301,7 @@
         return gen;
     };
     
-    itertool.takewhile = function(predicate, iterable) {
+    var takewhile = itertool.takewhile = function(predicate, iterable) {
         if (__type(predicate) !== 'Function') throw new TypeError;
         
         iterable = toIterator(iterable);
@@ -300,7 +316,7 @@
         return gen;
     };
     
-    itertool.ifilter = function() {
+    var ifilter = itertool.ifilter = function() {
         var iterable, predicate;
         
         if (arguments.length === 2) {
@@ -323,7 +339,7 @@
         });
     };
     
-    itertool.ifilterfalse = function() {
+    var ifilterfalse = itertool.ifilterfalse = function() {
         var iterable, predicate;
         
         if (arguments.length === 2) {
@@ -346,7 +362,7 @@
         });
     };
     
-    itertool.imap = function() {
+    var imap = itertool.imap = function() {
         var callback = arguments[0],
             iterables = __slice.call(arguments, 1),
             size = iterables.length;
@@ -371,9 +387,9 @@
         });
     };
         
-    itertool.islice = function(iterable) {
+    var islice = itertool.islice = function(iterable) {
         iterable = toIterator(iterable);
-        var iterRange = itertool.irange.apply(root, __slice.call(arguments, 1)),
+        var iterRange = irange.apply(root, __slice.call(arguments, 1)),
             validIdx,
             idx = -1;
             
@@ -391,7 +407,7 @@
         });
     };
     
-    itertool.izip = function() {
+    var izip = itertool.izip = function() {
         var iterables = __slice.call(arguments),
             size = iterables.length;
             
@@ -414,7 +430,7 @@
         });
     };
     
-    itertool.izip_longest = function() {
+    var izip_longest = itertool.izip_longest = function() {
         var iterables = __slice.call(arguments, 1),
             fillvalue = arguments[0] || "";
             numIterables = iterables.length;
@@ -453,7 +469,7 @@
         });
     };
     
-    itertool.starmap = function(callback, argList) {
+    var starmap = itertool.starmap = function(callback, argList) {
         if (__type(callback) !== 'Function') throw new TypeError;
         
         var iterable = toIterator(argList);
@@ -463,7 +479,7 @@
         });
     };
     
-    itertool.tee = function(iterable, n) {
+    var tee = itertool.tee = function(iterable, n) {
         n = n || 2;
         iterable = toIterator(iterable);
         
@@ -485,7 +501,7 @@
         return teeItrables;
     };
     
-    itertool.groupby = function(iterable, key) {
+    var groupby = itertool.groupby = function(iterable, key) {
         var keyfunc = key || function(x){ return x; },
             tgtkey, currkey, currvalue, grouper;
         
@@ -515,9 +531,6 @@
             tgtkey = currkey;
             return [currkey, grouper(tgtkey)];
         });
-        
-        
-        
     };
     
     itertool.noConflict = function() {
