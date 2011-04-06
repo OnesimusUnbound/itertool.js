@@ -601,4 +601,55 @@ $(document).ready(function() {
         function(actual){ return actual === StopIteration; },
         'raises StopIteration for ended tee 2');
   });
+  
+      
+  test("terminating: groupby", function() {
+    var items, gen, itemCount, group;
+    
+    gen = itertool.groupby("AAAABBBCCAAAAADDE"); items = [];
+    try {
+        for(i = 0; i < 100; i++) {
+            group = gen.next();
+            items.push([group[0], itertool.toArray(group[1])]);
+        }
+    } catch (err) {
+        if (err === StopIteration) {
+            equals(
+                _.map(items, function(group){
+                    return '(' + group[0] + ')[' + group[1].join('') + ']';
+                }).join(', '),
+                '(A)[AAAA], (B)[BBB], (C)[CC], (A)[AAAAA], (D)[DD], (E)[E]', 
+                'letters are grouped accordingly by uniqueness, default grouping');
+        } else {
+            ok(false, "Only StopIteration should be raised. Raised " + err);
+        }
+    }
+    
+    equals(items.length, 
+            6, 
+            '6 group iterators should be created');
+    
+    gen = itertool.groupby(itertool.irange(10), function(number){ return Math.floor(number / 3)}); items = [];
+    try {
+        for(i = 0; i < 100; i++) {
+            group = gen.next();
+            items.push([group[0], itertool.toArray(group[1])]);
+        }
+    } catch (err) {
+        if (err === StopIteration) {
+            equals(
+                _.map(items, function(group){
+                    return '(' + group[0] + ')[' + group[1].join(' ') + ']';
+                }).join(', '),
+                '(0)[0 1 2], (1)[3 4 5], (2)[6 7 8], (3)[9]', 
+                'numbers are grouped accordingly by custom key');
+        } else {
+            ok(false, "Only StopIteration should be raised. Raised " + err);
+        }
+    }
+    raises(
+        function(){ gen.next(); }, 
+        function(actual){ return actual === StopIteration; },
+        'raises StopIteration for groupby iterator');
+  });
 });
