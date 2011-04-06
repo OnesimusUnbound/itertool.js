@@ -1,7 +1,6 @@
 In Progress
 ===========
-    tee
-    groupby
+- groupby
 
 Completed
 =========
@@ -22,3 +21,4 @@ Terminating
 - imap
 - izip
 - starmap
+- tee
