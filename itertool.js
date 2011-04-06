@@ -3,7 +3,7 @@
 // itertools.js is freely distributable under the terms of the MIT license.
 // Documentation: https://github.com/OnesimusUnbound/itertool.js
 
-// Version 0.0.1
+// Version 0.0.*
 
 (function(){
     // ------------------------- Baseline setup ---------------------------------
@@ -61,8 +61,8 @@
         StopIteration = root.StopIteration;
     }
     itertool.StopIteration = StopIteration;
-    var Iterator = itertool.Iterator = function(){};
     
+    var Iterator = itertool.Iterator = function(){};
     Iterator.prototype.next = function(){ throw StopIteration; };
     Iterator.prototype.__iterator__ = function(){ return this; };
     
@@ -507,6 +507,8 @@
             return [currkey, grouper(tgtkey, true)];
         });
     };
+    
+    itertool.VERSION = '0.0.8';
     
     // CommonJS module is defined
     if (typeof module !== 'undefined' && module.exports) {
