@@ -44,7 +44,11 @@
             return result;
         },
         
-        __slice = ArrayProto.slice;
+        __slice = ArrayProto.slice,
+        
+        __truthy = function(item){ return !!item; },
+        
+        __identity = function(x){ return x; };
     
     var root = this, 
         __previous_itertool = root.itertool, 
@@ -73,10 +77,7 @@
             idx = 0;
         
         return extendIterator(function(){
-            if (size > idx) {
-                return array[idx++];
-            }
-            
+            if (size > idx) return array[idx++];
             throw StopIteration;
         });
     };
@@ -138,11 +139,25 @@
                 array.push(iterable.next());
             }
         } catch(err) {
-            if (err === StopIteration) {
-                return array;
-            } else {
-                throw err;
-            }
+            if (err !== StopIteration) throw err;
+            return array;
+        }
+    };
+    
+    
+    // Utility functions
+    // =================
+    
+    itertool.noConflict = function() {
+        root.itertool = __previous_itertool;
+        return this;
+    };
+    
+    var ieach = itertool.ieach = function(iterable, callback) {
+        try {
+            while(true) callback(iterable.next());
+        } catch(err) {
+            if (err !== StopIteration) throw err;
         }
     };
     
@@ -176,20 +191,18 @@
                 items.push(item);
                 return item;
             } catch (err) {
-                if (err === StopIteration) {
-                    size = items.length; 
-                    if (!size) throw err;
-                    
-                    idx = 0; 
-                    gen.next = function(){
-                        if (idx >= size) idx = 0;
-                        return items[idx++];
-                    };
-                    
-                    return gen.next();
-                } else {
-                    throw err;
-                }
+                if (err !== StopIteration) throw err;
+                
+                size = items.length; 
+                if (!size) throw err;
+                
+                idx = 0; 
+                gen.next = function(){
+                    if (idx >= size) idx = 0;
+                    return items[idx++];
+                };
+                
+                return gen.next();
             }
         });
         
@@ -199,27 +212,25 @@
     // repeat
     var repeat = itertool.repeat = function(element, n){
         var count = 0;
-            
-        return extendIterator(n !== void 0 
-            ? function(){
+        
+        if (__type(n) === 'Undefined') {
+            return extendIterator(function() { return element; });
+        } else {
+            return extendIterator(function(){
                 if (count < n) {
                     count++;
                     return element;
                 }
                 throw StopIteration;
-            } 
-            : function() { 
-                return element; 
-            }
-        );
+            });
+        }
     };
     
     // Terminating Iterators
     // =====================
     // chain
     var chain = itertool.chain = function(){
-        var iterables = __slice.call(arguments),
-            concatIters = [], 
+        var iterables = __slice.call(arguments), 
             size, iterIdx = 0, currentIter;
             
         iterables = __map(iterables, function(iterable){
@@ -237,15 +248,12 @@
             try {
                 return currentIter.next();
             } catch (err) {
-                if (err === StopIteration) {
-                    if (size > iterIdx) {
-                        currentIter = iterables[iterIdx++];
-                        return gen.next();
-                    }
-                    throw StopIteration;
-                } else {
-                    throw err;
+                if (err !== StopIteration) throw err;
+                if (size > iterIdx) {
+                    currentIter = iterables[iterIdx++];
+                    return gen.next();
                 }
+                throw StopIteration;
             }
         });
         
@@ -316,62 +324,38 @@
         return gen;
     };
     
-    var ifilter = itertool.ifilter = function() {
-        var iterable, predicate;
-        
-        if (arguments.length === 2) {
-            iterable = arguments[1];
-            predicate = arguments[0];
-            if (typeof predicate !== 'function') throw new TypeError;
-            
-        } else if (arguments.length === 1) {
-            iterable = arguments[0];
-            predicate = function(item){ return !!item; };
-            
-        }
-        
-        iterable = toIterator(iterable);
-        var validItem;
-        
+    var ifilter = itertool.ifilter = function(predicate, iterable) {
+        iterable = toIterator(iterable || predicate);
+        predicate = arguments.length === 2 ? predicate : __truthy;
+        if (typeof predicate !== 'function') throw new TypeError;
+
+        var validItem;        
         return extendIterator(function(){
             while(!predicate(validItem = iterable.next()));
             return validItem;
         });
     };
     
-    var ifilterfalse = itertool.ifilterfalse = function() {
-        var iterable, predicate;
-        
-        if (arguments.length === 2) {
-            iterable = arguments[1];
-            predicate = arguments[0];
-            if (__type(predicate) !== 'Function') throw new TypeError;
-            
-        } else if (arguments.length === 1) {
-            iterable = arguments[0];
-            predicate = function(item){ return !!item; };
-            
-        }
-        
-        iterable = toIterator(iterable);
-        var validItem;
-        
+    var ifilterfalse = itertool.ifilterfalse = function(predicate, iterable) {
+        iterable = toIterator(iterable || predicate);
+        predicate = arguments.length === 2 ? predicate : __truthy;
+        if (typeof predicate !== 'function') throw new TypeError;
+
+        var validItem;        
         return extendIterator(function(){
             while(predicate(validItem = iterable.next()));
             return validItem;
         });
     };
     
-    var imap = itertool.imap = function() {
-        var callback = arguments[0],
-            iterables = __slice.call(arguments, 1),
+    var imap = itertool.imap = function(callback) {
+        var iterables = __slice.call(arguments, 1),
             size = iterables.length;
         
         if (__type(callback) !== 'Function') throw new TypeError;
         
         iterables = __map(iterables, function(iterable){
             var type = __type(iterable);
-            
             if (type === 'Number' || type === 'RegExp') 
                 throw new TypeError;
                 
@@ -400,9 +384,7 @@
             while (true) {
                 item = iterable.next();
                 idx++;
-                if (idx === validIdx) {
-                    return item;
-                }
+                if (idx === validIdx) return item;
             }
         });
     };
@@ -425,7 +407,7 @@
                 return __map(iterables, function(iterable){
                     return iterable.next();
                 });
-                
+                    
             throw StopIteration;
         });
     };
@@ -451,13 +433,10 @@
                     try {
                         return iterable.next();
                     } catch(err) {
-                        if (err === StopIteration) {
-                            if (numEndedIter < numIterables) {
-                                numEndedIter++;
-                                return fillvalue;
-                            }
-                        } else {
-                            throw err;
+                        if (err !== StopIteration) throw err;
+                        if (numEndedIter < numIterables) {
+                            numEndedIter++;
+                            return fillvalue;
                         }
                     }
                 });
@@ -502,24 +481,24 @@
     };
     
     var groupby = itertool.groupby = function(iterable, key) {
-        var keyfunc = key || function(x){ return x; },
+        var keyfunc = key || __identity,
             tgtkey, currkey, currvalue, grouper;
         
         iterable = toIterator(iterable);
         tgtkey = currkey = currvalue = {};
         
-        grouper = function(ptgtkey, stopIter){
+        grouper = function(ptgtkey, continueIter){
             return extendIterator(function(){
                 var retvalue; 
-                if (currkey === ptgtkey && !stopIter) {
+                if (currkey === ptgtkey && continueIter) {
                     retvalue = currvalue;
                     try { 
                         currvalue = iterable.next();
                     } catch (err) {
-                        if (err === StopIteration) stopIter = true;
+                        if (err !== StopIteration) throw err;
+                        continueIter = false;
                     }
                     currkey = keyfunc(currvalue);
-                    
                     return retvalue;
                 } 
                 
@@ -533,13 +512,8 @@
                 currkey = keyfunc(currvalue);
             }
             tgtkey = currkey;
-            return [currkey, grouper(tgtkey, false)];
+            return [currkey, grouper(tgtkey, true)];
         });
-    };
-    
-    itertool.noConflict = function() {
-        root.itertool = __previous_itertool;
-        return this;
     };
     
     // CommonJS module is defined
