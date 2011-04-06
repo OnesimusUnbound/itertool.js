@@ -1,6 +1,6 @@
 In Progress
 ===========
-- groupby
+- add documentation and clean up code
 
 Completed
 =========
@@ -22,3 +22,4 @@ Terminating
 - izip
 - starmap
 - tee
+- groupby

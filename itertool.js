@@ -508,12 +508,16 @@
         iterable = toIterator(iterable);
         tgtkey = currkey = currvalue = {};
         
-        grouper = function(ptgtkey){
+        grouper = function(ptgtkey, stopIter){
             return extendIterator(function(){
                 var retvalue; 
-                if (currkey === ptgtkey) {
+                if (currkey === ptgtkey && !stopIter) {
                     retvalue = currvalue;
-                    currvalue = iterable.next();
+                    try { 
+                        currvalue = iterable.next();
+                    } catch (err) {
+                        if (err === StopIteration) stopIter = true;
+                    }
                     currkey = keyfunc(currvalue);
                     
                     return retvalue;
@@ -529,7 +533,7 @@
                 currkey = keyfunc(currvalue);
             }
             tgtkey = currkey;
-            return [currkey, grouper(tgtkey)];
+            return [currkey, grouper(tgtkey, false)];
         });
     };
     
