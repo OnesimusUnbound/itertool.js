@@ -2,15 +2,14 @@
 // (c) 2011 OnesimusUnbound <marcelino dat deseo aet gmail dat com>
 // itertools.js is freely distributable under the terms of the MIT license.
 // Documentation: https://github.com/OnesimusUnbound/itertool.js
-
 // Version 0.0.*
+//
+//
 
 (function(){
-    // ------------------------- Baseline setup ---------------------------------
-    
     var ObjectProto = Object.prototype,
         ArrayProto = Array.prototype;
-        
+
     var __hasOwns = ObjectProto.hasOwnProperty,
     
         __type = function(obj){
@@ -50,11 +49,16 @@
         
         __identity = function(x){ return x; };
     
+    
     var root = this, 
         __previous_itertool = root.itertool, 
         itertool = {};
         
+    // `StopIteration` is an exception thrown whenever the generator is completed
     var StopIteration;
+    
+    // To use either the global `StopIteration` (Mozilla's JS engines)
+    // or implement one.
     if (!root.StopIteration) {
         StopIteration = root.StopIteration = Error('StopIteration');
     } else {
@@ -62,14 +66,22 @@
     }
     itertool.StopIteration = StopIteration;
     
+    // `Iterator` the basic iterator from which derived 
+    // `Iterator` will reference. This is will not use Mozilla's 
+    // `Iterator, instead it will be made compatible
     var Iterator = itertool.Iterator = function(){};
     Iterator.prototype.next = function(){ throw StopIteration; };
     Iterator.prototype.__iterator__ = function(){ return this; };
     
+    // a helper function to instantiate Iterator and implement the 
+    // instance's `next` function
     var extendIterator = function(nextImpl) {
         return __extend(new Iterator, {next: nextImpl});
     };
     
+    // `ArrayIterator(array)` is an iterator for array
+    // 
+    // `array` refers to the array that will be iterated
     var ArrayIterator = itertool.ArrayIterator = function(array) {
         if(__type(array) === 'Undefined') throw new TypeError;
     
@@ -82,6 +94,10 @@
         });
     };
     
+    // `StringIterator(string, option = "")` is an iterator for string.
+    // 
+    // `string` refers to the string that will be iterated
+    // `option` refers to string or regexp that will split the `string`
     var StringIterator = itertool.StringIterator = function(string, option){
         if(__type(string) === 'Undefined') throw new TypeError;
         
@@ -98,6 +114,14 @@
         return ArrayIterator(items);
     }
     
+    // `ObjectIterator(obj, option = "values")` iterates through the objects property, excluding that of
+    // its prototype ("parent class").
+    // 
+    // `obj` the object whose properties are to be iterated
+    // `option` refers to how the properties are to be iterated
+    // - "keys" the name of the propterty are to be iterated
+    // - "value" the value of the propterty are to be iterated. This is the default operation
+    // - "all" the key and value pair are to be iterated, stored in array
     var ObjectIterator = itertool.ObjectIterator = function(obj, option) {
         if(__type(obj) === 'Undefined') throw new TypeError;
     
@@ -115,6 +139,9 @@
         return ArrayIterator(items);
     };
     
+    // `toIterator(obj, [option])` accepts string, array, objects and creates 
+    // the equivalent iterator by delegating to appropriate
+    // iterator.
     var toIterator = itertool.toIterator = function(obj){
         switch(__type(obj)){
             case 'String':      return StringIterator.apply(root, arguments);
@@ -124,6 +151,7 @@
         }
     };
     
+    // `toArray` converts the iterator to array
     var toArray = itertool.toArray = function(iterable){
         var array = [];
         
@@ -153,10 +181,17 @@
         }
     };
     
-    // Infinite Iterators
-    // ==================
+    // Infinite Iterator
+    // =================
+    //
+    // Infinite Iterators creates generators that usually does not terminate
+    // This is useful for generating infinite series of numbers.
     
-    // counter
+    // `counter(start = 0, step = 1)` creates a generator that returns numbers starting from `start`, 
+    // incrementing (or decrementing) by `step`. The generator does not end.
+    // 
+    // `start` the starting point of the count
+    // `step` the number that will be added for the next count
     var counter = itertool.counter = function(start, step){
         start = start || 0;
         step  = step  || 1;
@@ -167,19 +202,21 @@
         });
     };
     
-    // cycle
-    var cycle = itertool.cycle = function(obj){
-        var type = __type(obj);
+    // `cycle(iterable)` creates generator that repeats the content of the `iterable`
+    //
+    // `iterable` an item that can be iterated
+    var cycle = itertool.cycle = function(iterable){
+        var type = __type(iterable);
         
         if (type === 'Number' || type === 'RegExp' || type === 'Null')
             throw new TypeError;
     
-        var iter = toIterator(obj),
-            gen, size, idx, items = [];
+        iterable = toIterator(iterable);
         
+        var gen, size, idx, items = [];
         gen = extendIterator(function(){
             try {
-                var item = iter.next();
+                var item = iterable.next();
                 items.push(item);
                 return item;
             } catch (err) {
@@ -201,7 +238,11 @@
         return gen;
     };
     
-    // repeat
+    // `repeat(element, [n])` creates generator that repeats the `element` by 
+    // `n`th times, or infinitely if `n` is not provided
+    //
+    // `element` the item to be repeated
+    // `n` the numbers of times the `element` to be returned. To iterate infinitely, the 
     var repeat = itertool.repeat = function(element, n){
         var count = 0;
         
@@ -220,7 +261,12 @@
     
     // Terminating Iterators
     // =====================
-    // chain
+    // 
+    // Terminating iterators creates generators that will surely terminate (unless you passed an infinite iterable!)
+    
+    // `chain(iterables...)` will "concatenate" all iterables passed, treating them as one iterable
+    //
+    // `iterables` iterables that will be concatenated 
     var chain = itertool.chain = function(){
         var iterables = __slice.call(arguments), 
             size, iterIdx = 0, currentIter;
@@ -252,7 +298,13 @@
         return gen;
     };
     
-    // irange
+    // `irange(stop), irange(start, stop), irange(start, stop, step)` is equivalent to python's 
+    // xrange, that is, generating returning sequence of numbers 
+    // from `start` to `end` by `step`
+    //
+    // `start` the starting point of the count.
+    // `stop` the end point of the count
+    // `the number of steps for a count`
     var irange = itertool.irange = function(start, stop, step) {
         if (arguments.length <= 1) {
             stop = start || 0;
@@ -272,7 +324,13 @@
             throw StopIteration;
         });
     };
-    
+        
+    // `compress(data, selectors)` returns the item in `data` 
+    // whose corresponding item in `selectors` will evaluate true
+    //
+    // `data` an iterator whose item will be returned if its 
+    // corresponding `selectors` evaluates to true
+    // `selectors` 
     var compress = itertool.compress = function(data, selectors) {
         var iterData = toIterator(data),
             iterSelector = toIterator(selectors);
