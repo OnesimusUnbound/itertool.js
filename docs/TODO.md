@@ -1,6 +1,6 @@
 In Progress
 ===========
-- add documentation and clean up code
+- make operations in all itertool functions `lazier`
 
 Completed
 =========

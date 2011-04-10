@@ -615,7 +615,7 @@
     };
     
     // Library version (Major.Minor.Build)
-    itertool.VERSION = '0.0.8';
+    itertool.VERSION = '0.1.0';
     
     // CommonJS `module` is defined
     if (typeof module !== 'undefined' && module.exports) {
