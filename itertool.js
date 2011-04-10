@@ -1,17 +1,26 @@
 // itertool.js
+// ===========
+// 
 // (c) 2011 OnesimusUnbound <marcelino dat deseo aet gmail dat com>
 // itertools.js is freely distributable under the terms of the MIT license.
 // Documentation: https://github.com/OnesimusUnbound/itertool.js
 // Version 0.0.*
 //
+// The itertool.js is a port from Python's `itertools` to JavaScript,
+// without using Mozilla's `Iterator` and `yield`, relying instead 
+// on using `next` and `try ... catch` of the `StopIteration`.
 //
 
 (function(){
-    var ObjectProto = Object.prototype,
-        ArrayProto = Array.prototype;
-
-    var __hasOwns = ObjectProto.hasOwnProperty,
-    
+    var // To quickly access the methods associated with the prototypes
+        ObjectProto = Object.prototype,
+        ArrayProto = Array.prototype,
+        
+        // Checks if the the property is part of the object, not of it's prottype's
+        __hasOwns = ObjectProto.hasOwnProperty,
+        
+        // Determines the type of the object. Relevant to this library detect of 
+        // the type of the passed parameter for validation
         __type = function(obj){
             if (typeof obj === 'undefined') {
                 return "Undefined";
@@ -24,6 +33,7 @@
             }
         },
         
+        // Appends the properties of `other` to `obj`.
         __extend = function(obj, other){
             for (var prop in other){
                 if (__hasOwns.call(other, prop)) {
@@ -33,32 +43,39 @@
             return obj;
         },
         
-        __map = function(items, callback){
+        // The functional `map` that calls the `callback` for each item in the `array`
+        __map = function(array, callback){
             var result = [];
             
-            for (var i = 0; i < items.length; i++){
-                result[i] = callback(items[i]);
+            for (var i = 0; i < array.length; i++){
+                result[i] = callback(array[i]);
             }
             
             return result;
         },
         
+        // To select portion of array or to create a new copy
         __slice = ArrayProto.slice,
         
+        // Test the truthiness of the object
         __truthy = function(item){ return !!item; },
         
-        __identity = function(x){ return x; };
-    
-    
-    var root = this, 
-        __previous_itertool = root.itertool, 
-        itertool = {};
+        // returns the object as it is. 
+        __identity = function(x){ return x; },
         
-    // `StopIteration` is an exception thrown whenever the generator is completed
-    var StopIteration;
+        // to get the global object, for browser's `window` or `global` in other js engines
+        root = this, 
+        
+        // stores the content of previously defined `itertool` in the global scope to avoid overriding it
+        __previous_itertool = root.itertool, 
+        
+        // set up the namespace of the itertool
+        itertool = {},
+        
+        // `StopIteration` is an exception thrown whenever the generator is completed
+        StopIteration;
     
-    // To use either the global `StopIteration` (Mozilla's JS engines)
-    // or implement one.
+    // To use either the global `StopIteration` (Mozilla's JS engines) or implement one.
     if (!root.StopIteration) {
         StopIteration = root.StopIteration = Error('StopIteration');
     } else {
@@ -66,22 +83,20 @@
     }
     itertool.StopIteration = StopIteration;
     
-    // `Iterator` the basic iterator from which derived 
-    // `Iterator` will reference. This is will not use Mozilla's 
-    // `Iterator, instead it will be made compatible
+    // `Iterator` the basic iterator from which derived iterators will reference. 
+    // This is will not use Mozilla's `Iterator`, instead it will be made compatible
+    // with Mozilla's implementation
     var Iterator = itertool.Iterator = function(){};
     Iterator.prototype.next = function(){ throw StopIteration; };
     Iterator.prototype.__iterator__ = function(){ return this; };
     
-    // a helper function to instantiate Iterator and implement the 
-    // instance's `next` function
+    // A helper function to instantiate Iterator and implement the 
+    // instance's `next` function in `nextImpl`
     var extendIterator = function(nextImpl) {
         return __extend(new Iterator, {next: nextImpl});
     };
     
-    // `ArrayIterator(array)` is an iterator for array
-    // 
-    // `array` refers to the array that will be iterated
+    // Creates an iterator for array
     var ArrayIterator = itertool.ArrayIterator = function(array) {
         if(__type(array) === 'Undefined') throw new TypeError;
     
@@ -94,10 +109,7 @@
         });
     };
     
-    // `StringIterator(string, option = "")` is an iterator for string.
-    // 
-    // `string` refers to the string that will be iterated
-    // `option` refers to string or regexp that will split the `string`
+    // creates is an iterator for string.
     var StringIterator = itertool.StringIterator = function(string, option){
         if(__type(string) === 'Undefined') throw new TypeError;
         
@@ -114,14 +126,8 @@
         return ArrayIterator(items);
     }
     
-    // `ObjectIterator(obj, option = "values")` iterates through the objects property, excluding that of
-    // its prototype ("parent class").
-    // 
-    // `obj` the object whose properties are to be iterated
-    // `option` refers to how the properties are to be iterated
-    // - "keys" the name of the propterty are to be iterated
-    // - "value" the value of the propterty are to be iterated. This is the default operation
-    // - "all" the key and value pair are to be iterated, stored in array
+    // iterates through the objects property, excluding that of its prototype ("parent class").
+    // `option` determines how the object is iterated
     var ObjectIterator = itertool.ObjectIterator = function(obj, option) {
         if(__type(obj) === 'Undefined') throw new TypeError;
     
@@ -129,9 +135,10 @@
         for (var key in obj){
             if (__hasOwns.call(obj, key)){
                 switch(option){
-                    case 'keys' : items.push(key); break;
-                    case 'all'  : items.push([key, obj[key]]); break;
-                    default     : items.push(obj[key]);
+                    case 'keys'     : items.push(key); break;
+                    case 'all'      : items.push([key, obj[key]]); break;
+                    case 'values'   :
+                    default         : items.push(obj[key]);
                 }
             }
         }
@@ -139,9 +146,8 @@
         return ArrayIterator(items);
     };
     
-    // `toIterator(obj, [option])` accepts string, array, objects and creates 
-    // the equivalent iterator by delegating to appropriate
-    // iterator.
+    // Accepts string, array, objects and creates the equivalent 
+    // iterator by delegating to appropriate iterator builder.
     var toIterator = itertool.toIterator = function(obj){
         switch(__type(obj)){
             case 'String':      return StringIterator.apply(root, arguments);
@@ -151,7 +157,8 @@
         }
     };
     
-    // `toArray` converts the iterator to array
+    // Converts the iterator to array. Do not use this 
+    // function for infinite iterators!
     var toArray = itertool.toArray = function(iterable){
         var array = [];
         
@@ -165,8 +172,8 @@
     };
     
     
-    // Utility functions
-    // =================
+    // Utility Functions
+    // -----------------
     
     itertool.noConflict = function() {
         root.itertool = __previous_itertool;
@@ -182,16 +189,15 @@
     };
     
     // Infinite Iterator
-    // =================
+    // -----------------
     //
-    // Infinite Iterators creates generators that usually does not terminate
+    // Infinite Iterators creates iterators that usually does not terminate
     // This is useful for generating infinite series of numbers.
     
-    // `counter(start = 0, step = 1)` creates a generator that returns numbers starting from `start`, 
-    // incrementing (or decrementing) by `step`. The generator does not end.
-    // 
-    // `start` the starting point of the count
-    // `step` the number that will be added for the next count
+    // This creates iterator that returns numbers starting from `start`, 
+    // incrementing (or decrementing) by `step`. The iterator does not end.
+    //
+    // `cycle(start = 0, step = 1)`
     var counter = itertool.counter = function(start, step){
         start = start || 0;
         step  = step  || 1;
@@ -202,9 +208,9 @@
         });
     };
     
-    // `cycle(iterable)` creates generator that repeats the content of the `iterable`
+    // This creates a iterator that repeats the content of the `iterable`.
     //
-    // `iterable` an item that can be iterated
+    // `cycle(iterable)`
     var cycle = itertool.cycle = function(iterable){
         var type = __type(iterable);
         
@@ -238,11 +244,10 @@
         return gen;
     };
     
-    // `repeat(element, [n])` creates generator that repeats the `element` by 
-    // `n`th times, or infinitely if `n` is not provided
+    // This creates iterator that repeats the `element` by 
+    // `n`th times, or infinitely if `n` is not provided.
     //
-    // `element` the item to be repeated
-    // `n` the numbers of times the `element` to be returned. To iterate infinitely, the 
+    // `repeat(element, [n])`
     var repeat = itertool.repeat = function(element, n){
         var count = 0;
         
@@ -260,13 +265,13 @@
     };
     
     // Terminating Iterators
-    // =====================
+    // ---------------------
     // 
-    // Terminating iterators creates generators that will surely terminate (unless you passed an infinite iterable!)
+    // Terminating iterators creates itrators that will surely terminate (unless you passed an infinite iterable!)
     
-    // `chain(iterables...)` will "concatenate" all iterables passed, treating them as one iterable
-    //
-    // `iterables` iterables that will be concatenated 
+    // This will create iterator that "concatenate" all iterables passed, creating one iterable
+    // 
+    // `chain(iterables...)`
     var chain = itertool.chain = function(){
         var iterables = __slice.call(arguments), 
             size, iterIdx = 0, currentIter;
@@ -298,13 +303,10 @@
         return gen;
     };
     
-    // `irange(stop), irange(start, stop), irange(start, stop, step)` is equivalent to python's 
-    // xrange, that is, generating returning sequence of numbers 
-    // from `start` to `end` by `step`
+    // This is equivalent to python's  `xrange`, that is, generating returning 
+    // iterator that generates numbers from `start` to `end` by `step`
     //
-    // `start` the starting point of the count.
-    // `stop` the end point of the count
-    // `the number of steps for a count`
+    // `irange(stop) or irange(start, stop) or irange(start, stop, step)`
     var irange = itertool.irange = function(start, stop, step) {
         if (arguments.length <= 1) {
             stop = start || 0;
@@ -324,13 +326,10 @@
             throw StopIteration;
         });
     };
-        
-    // `compress(data, selectors)` returns the item in `data` 
-    // whose corresponding item in `selectors` will evaluate true
-    //
-    // `data` an iterator whose item will be returned if its 
-    // corresponding `selectors` evaluates to true
-    // `selectors` 
+    
+    // This returns iterator where the item in `data` whose corresponding item in `selectors` will evaluate true in truthiness
+    // 
+    // `compress(data, selectors)` 
     var compress = itertool.compress = function(data, selectors) {
         var iterData = toIterator(data),
             iterSelector = toIterator(selectors);
@@ -343,6 +342,15 @@
         });
     };
     
+    
+    // This returns an iterator that drops the first items in the 
+    // `iterable` that does not return `true` as defined in the 
+    // `predicate`, When an item does not return `true` in the 
+    // `predicate`, that item and those that succeed it in the 
+    // predicate are returned, even if an item returns `true` in 
+    // the predicate.
+    // 
+    // `dropwhile(predicate, iterable)`
     var dropwhile = itertool.dropwhile = function(predicate, iterable) {
         if (__type(predicate) !== 'Function') throw new TypeError;
         
@@ -359,6 +367,14 @@
         return gen;
     };
     
+    // This returns an iterator that takes the first items in the 
+    // `iterable` that returns `true` as defined in the 
+    // `predicate`, When an item does not return `true` in the 
+    // `predicate`, that item and those that succeed it in the 
+    // predicate are discarded, even if an item returns `true` in 
+    // the predicate.
+    // 
+    // takewhile(predicate, iterable)
     var takewhile = itertool.takewhile = function(predicate, iterable) {
         if (__type(predicate) !== 'Function') throw new TypeError;
         
@@ -367,13 +383,21 @@
             gen = extendIterator(function(){
                 if (predicate(takenItem = iterable.next()))
                     return takenItem;
+                    
+                gen.next = function(){
+                    throw StopIteration;
+                };
                 
-                throw StopIteration;
+                gen.next();
             });
         
         return gen;
     };
     
+    // Returns an iterator that returns items in the iterable` 
+    // that evaluates `true` when passed in the `predicate`.
+    // 
+    // `ifilter(predicate, iterable)`
     var ifilter = itertool.ifilter = function(predicate, iterable) {
         iterable = toIterator(iterable || predicate);
         predicate = arguments.length === 2 ? predicate : __truthy;
@@ -386,6 +410,10 @@
         });
     };
     
+    // Returns an iterator that returns items in the `iterable` 
+    // that evaluates `false` when passed in the `predicate`.
+    // 
+    // `ifilterfalse(predicate, iterable)`
     var ifilterfalse = itertool.ifilterfalse = function(predicate, iterable) {
         iterable = toIterator(iterable || predicate);
         predicate = arguments.length === 2 ? predicate : __truthy;
@@ -398,29 +426,26 @@
         });
     };
     
+    // Returns an iterator that returns the result of an item from each `iterable` 
+    // in `iterables` passed in the `predicate`.
+    // 
+    // imap(predicate, iterators...)
     var imap = itertool.imap = function(callback) {
-        var iterables = __slice.call(arguments, 1),
-            size = iterables.length;
+        var iterables = __slice.call(arguments, 1);
         
         if (__type(callback) !== 'Function') throw new TypeError;
         
-        iterables = __map(iterables, function(iterable){
-            var type = __type(iterable);
-            if (type === 'Number' || type === 'RegExp') 
-                throw new TypeError;
-                
-            return toIterator(iterable);
-        });
+        var iterable = izip.apply(root, iterables);
             
         return extendIterator(function(){
-            var args = __map(iterables, function(iterable){ 
-                return iterable.next(); 
-            });
-            
-            return callback.apply(root, args);
+            return callback.apply(root, iterable.next());
         });
     };
-        
+    
+    // Returns an iterator that returns item in `iterable` whose 
+    // order matches the series generated by `irange(start, stop, step)`
+    // 
+    // islice(iterable, stop) or islice(iterable, start, stop) or islice(iterable, start, stop, step) 
     var islice = itertool.islice = function(iterable) {
         iterable = toIterator(iterable);
         var iterRange = irange.apply(root, __slice.call(arguments, 1)),
@@ -439,6 +464,11 @@
         });
     };
     
+    // Returns iterator that returns combined all items of the same order for each iterables
+    // The the maximum number of items returned by the generated iterator will depend on the 
+    // the `iterable` that has the fewest number of item returned.
+    // 
+    // `izip(iterables...)`
     var izip = itertool.izip = function() {
         var iterables = __slice.call(arguments),
             size = iterables.length;
@@ -462,6 +492,11 @@
         });
     };
     
+    // Returns iterator that returns combined all items of the same order for each iterables
+    // When one of the iterable ends while there are some that did not end, the `fillvalue` 
+    // will be used. when no fillvalue was passed, an empty string is used.
+    // 
+    // `izip_longest(fillvalue = "", iterables...)`
     var izip_longest = itertool.izip_longest = function() {
         var iterables = __slice.call(arguments, 1),
             fillvalue = arguments[0] || "";
@@ -498,6 +533,9 @@
         });
     };
     
+    // TODO
+    // 
+    // `starmap(callback, argList)`
     var starmap = itertool.starmap = function(callback, argList) {
         if (__type(callback) !== 'Function') throw new TypeError;
         

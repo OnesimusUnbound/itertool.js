@@ -309,9 +309,21 @@ $(document).ready(function() {
             equals(
                 items.join(' '), 
                 '1 2 4', 
-                'droping first items that do not meet requirement');
+                'taking first items that do not meet requirement');
     }
     
+    gen = itertool.takewhile(function(item){ return item < 5; }, [1, 6, 1]); items = [];
+    gen.next();
+    raises(
+        function(){ gen.next(); }, 
+        function(actual){ return actual === StopIteration; },
+        'raises StopIteration on first non matching item');
+    
+    raises(
+        function(){ gen.next(); }, 
+        function(actual){ return actual === StopIteration; },
+        'raises StopIteration for succeding items, even if it matches the predicate');
+        
     gen = itertool.takewhile(function(item){ return item > 100; }, [1, 2, 4, 6, 1, 2]); items = [];
     raises(
         function(){ gen.next(); }, 
