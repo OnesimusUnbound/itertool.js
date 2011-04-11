@@ -90,10 +90,10 @@ $(document).ready(function() {
     raises(function(){ itertool.ObjectIterator(); }, TypeError, 'empty parameter will raise TypeError');
   });
   
-  test("builder: toIterator", function() {
+  test("builder: iter", function() {
     var items, gen, obj = {a: 1, b: "Test", c: "xyz"};
     
-    gen = itertool.toIterator("ABCDEF", /[BE]/); items = [];
+    gen = itertool.iter("ABCDEF", /[BE]/); items = [];
     _(3).times(function(){ items.push(gen.next()); });
     equals(items.join(' '), 'A CD F', 'iterate through string');
     raises(
@@ -101,7 +101,7 @@ $(document).ready(function() {
         function(actual){ return actual === StopIteration; },
         'finished string iterator will raise StopIteration');
         
-    gen = itertool.toIterator([1, 2, 4]); items = [];
+    gen = itertool.iter([1, 2, 4]); items = [];
     _(3).times(function(){ items.push(gen.next()); });
     equals(items.join(' '), '1 2 4', 'iterate through values in array');
     raises(
@@ -109,7 +109,7 @@ $(document).ready(function() {
         function(actual){ return actual === StopIteration; },
         'finished array iterator will raise StopIteration');
         
-    gen = itertool.toIterator(obj, "all"); items = [];
+    gen = itertool.iter(obj, "all"); items = [];
     _(3).times(function(){ items.push(gen.next()); });
     equals(
         _.map(items, function(item){
@@ -122,7 +122,7 @@ $(document).ready(function() {
         function(actual){ return actual === StopIteration; }, 
         'finished object iterator using defined string separator will raise StopIteration');
         
-    gen = itertool.toIterator(itertool.StringIterator('ABC')); items = [];
+    gen = itertool.iter(itertool.StringIterator('ABC')); items = [];
     _(3).times(function(){ items.push(gen.next()); });
     equals(items.join(' '), 'A B C', 'iterate through values in string iterator');
     raises(
@@ -130,19 +130,19 @@ $(document).ready(function() {
         function(actual){ return actual === StopIteration; },
         'finished array iterator will raise StopIteration');
         
-    raises(function(){ itertool.toIterator(); }, TypeError, 'empty parameter will raise TypeError');
+    raises(function(){ itertool.iter(); }, TypeError, 'empty parameter will raise TypeError');
   });
   
   test("builder: toArray", function() {
     var gen, obj = {a: 1, b: "Test", c: "xyz"};
     
-    gen = itertool.toIterator("ABCDEF", /[BE]/); 
+    gen = itertool.iter("ABCDEF", /[BE]/); 
     equals(itertool.toArray(gen).join(' '), 'A CD F', 'convert string iterator to array');
         
-    gen = itertool.toIterator([1, 2, 4]); 
+    gen = itertool.iter([1, 2, 4]); 
     equals(itertool.toArray(gen).join(' '), '1 2 4', 'convert numeric iterator to array');
 
-    gen = itertool.toIterator(itertool.StringIterator('ABC'));
+    gen = itertool.iter(itertool.StringIterator('ABC'));
     equals(itertool.toArray(gen).join(' '), 'A B C', 'convert string iterator to array');
         
     raises(function(){ itertool.toArray(); }, TypeError, 'empty parameter will raise TypeError');

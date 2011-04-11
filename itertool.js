@@ -4,7 +4,7 @@
 // (c) 2011 OnesimusUnbound <marcelino dat deseo aet gmail dat com>
 // itertools.js is freely distributable under the terms of the MIT license.
 // Documentation: https://github.com/OnesimusUnbound/itertool.js
-// Version 0.0.*
+// Version 0.1.*
 //
 // The itertool.js is a port from Python's `itertools` to JavaScript,
 // without using Mozilla's `Iterator` and `yield`, relying instead 
@@ -132,6 +132,7 @@
         if(__type(obj) === 'Undefined') throw new TypeError;
     
         var items = [];
+        
         for (var key in obj){
             if (__hasOwns.call(obj, key)){
                 switch(option){
@@ -148,7 +149,7 @@
     
     // Accepts string, array, objects and creates the equivalent 
     // iterator by delegating to appropriate iterator builder.
-    var toIterator = itertool.toIterator = function(obj){
+    var iter = itertool.iter = function(obj){
         switch(__type(obj)){
             case 'String':      return StringIterator.apply(root, arguments);
             case 'Array':       return ArrayIterator.apply(root, arguments);
@@ -212,12 +213,13 @@
     //
     // `cycle(iterable)`
     var cycle = itertool.cycle = function(iterable){
-        var type = __type(iterable);
+        var type = __type(iterable),
+            iterConverted;
         
         if (type === 'Number' || type === 'RegExp' || type === 'Null')
             throw new TypeError;
     
-        iterable = toIterator(iterable);
+        iterable = iter(iterable);
         
         var gen, size, idx, items = [];
         gen = extendIterator(function(){
@@ -281,7 +283,7 @@
             if (type === 'Number' || type === 'RegExp') 
                 throw new TypeError;
                 
-            return toIterator(iterable)
+            return iter(iterable)
         });
             
         size = iterables.length;
@@ -332,8 +334,8 @@
     // 
     // `compress(data, selectors)` 
     var compress = itertool.compress = function(data, selectors) {
-        var iterData = toIterator(data),
-            iterSelector = toIterator(selectors);
+        var iterData = iter(data),
+            iterSelector = iter(selectors);
             
         return extendIterator(function(){
             while(!iterSelector.next()) {
@@ -353,7 +355,7 @@
     var dropwhile = itertool.dropwhile = function(predicate, iterable) {
         if (__type(predicate) !== 'Function') throw new TypeError;
         
-        iterable = toIterator(iterable);
+        iterable = iter(iterable);
         var firstValid,
             gen = extendIterator(function(){
                 while(predicate(firstValid = iterable.next()));
@@ -375,7 +377,7 @@
     var takewhile = itertool.takewhile = function(predicate, iterable) {
         if (__type(predicate) !== 'Function') throw new TypeError;
         
-        iterable = toIterator(iterable);
+        iterable = iter(iterable);
         var takenItem,
             gen = extendIterator(function(){
                 if (predicate(takenItem = iterable.next()))
@@ -396,7 +398,7 @@
     // 
     // `ifilter(predicate, iterable)`
     var ifilter = itertool.ifilter = function(predicate, iterable) {
-        iterable = toIterator(iterable || predicate);
+        iterable = iter(iterable || predicate);
         predicate = arguments.length === 2 ? predicate : __truthy;
         if (typeof predicate !== 'function') throw new TypeError;
 
@@ -412,7 +414,7 @@
     // 
     // `ifilterfalse(predicate, iterable)`
     var ifilterfalse = itertool.ifilterfalse = function(predicate, iterable) {
-        iterable = toIterator(iterable || predicate);
+        iterable = iter(iterable || predicate);
         predicate = arguments.length === 2 ? predicate : __truthy;
         if (typeof predicate !== 'function') throw new TypeError;
 
@@ -444,10 +446,9 @@
     // 
     // islice(iterable, stop) or islice(iterable, start, stop) or islice(iterable, start, stop, step) 
     var islice = itertool.islice = function(iterable) {
-        iterable = toIterator(iterable);
+        iterable = enumerate(iterable);
         var iterRange = irange.apply(root, __slice.call(arguments, 1)),
-            validIdx,
-            idx = -1;
+            validIdx;
             
         return extendIterator(function(){
             var item;
@@ -455,8 +456,8 @@
             validIdx = iterRange.next();
             while (true) {
                 item = iterable.next();
-                idx++;
-                if (idx === validIdx) return item;
+                
+                if (item[0] === validIdx) return item[1];
             }
         });
     };
@@ -476,7 +477,7 @@
             if (type === 'Number' || type === 'RegExp') 
                 throw new TypeError;
                 
-            return toIterator(iterable);
+            return iter(iterable);
         });
             
         return extendIterator(function(){
@@ -505,7 +506,7 @@
             if (type === 'Number' || type === 'RegExp') 
                 throw new TypeError;
                 
-            return toIterator(iterable);
+            return iter(iterable);
         });
             
         return extendIterator(function(){
@@ -538,7 +539,7 @@
     var starmap = itertool.starmap = function(callback, argList) {
         if (__type(callback) !== 'Function') throw new TypeError;
         
-        var iterable = toIterator(argList);
+        var iterable = iter(argList);
             
         return extendIterator(function(){
             return callback.apply(root, iterable.next());
@@ -551,7 +552,7 @@
     // `tee(iterable, n = 2)`
     var tee = itertool.tee = function(iterable, n) {
         n = n || 2;
-        iterable = toIterator(iterable);
+        iterable = iter(iterable);
         
         var queue = [],
             teeItrables = [], 
@@ -582,7 +583,7 @@
         var keyfunc = key || __identity,
             tgtkey, currkey, currvalue, grouper;
         
-        iterable = toIterator(iterable);
+        iterable = iter(iterable);
         tgtkey = currkey = currvalue = {};
         
         grouper = function(ptgtkey, continueIter){
@@ -611,6 +612,19 @@
             }
             tgtkey = currkey;
             return [currkey, grouper(tgtkey, true)];
+        });
+    };
+    
+    var enumerate = itertool.enumerate = function(iterable, start) {
+        start = start || 0;
+        var idx = start,
+            iterableArray;
+        
+        return extendIterator(function(){
+            if (!iterableArray) {
+                iterableArray = iter(iterable);
+            }
+            return [idx++, iterableArray.next()];
         });
     };
     
