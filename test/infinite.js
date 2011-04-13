@@ -46,26 +46,22 @@ $(document).ready(function() {
     _(7).times(function(){ items.push(gen.next()); });
     equals(items.join(' '), '1 A 12 Run 1 A 12', 'cycling assorted list, calling 7 times');
     
-    raises(function(){ itertool.cycle(1); }, TypeError, 'Number is not allowed');
-    raises(function(){ itertool.cycle(/abc/); }, TypeError, 'Regex is not allowed');
-    raises(function(){ itertool.cycle(null); }, TypeError, 'null is not allowed');
+    raises(function(){ itertool.cycle(1).next(); }, TypeError, 'Number is not allowed');
+    raises(function(){ itertool.cycle(/abc/).next(); }, TypeError, 'Regex is not allowed');
+    raises(function(){ itertool.cycle(null).next(); }, TypeError, 'null is not allowed');
 
-    
-    gen = itertool.cycle("");
     raises(
-        function(){ gen.next(); }, 
+        function(){ itertool.cycle("").next(); }, 
         function(actual){ return actual === StopIteration; }, 
         'empty string will raise StopIteration');
         
-    gen = itertool.cycle([]);
     raises(
-        function(){ gen.next(); }, 
+        function(){ itertool.cycle([]).next(); }, 
         function(actual){ return actual === StopIteration; }, 
         'empty array will raise StopIteration'); 
     
-    gen = itertool.cycle({});
     raises(
-        function(){ gen.next(); }, 
+        function(){ itertool.cycle({}).next(); }, 
         function(actual){ return actual === StopIteration; }, 
         'empty object will raise StopIteration');
     

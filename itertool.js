@@ -105,7 +105,7 @@
         
         return extendIterator(function(){
             if (size > idx) return array[idx++];
-            throw StopIteration;
+            iter.stop();
         });
     };
     
@@ -151,11 +151,18 @@
     // iterator by delegating to appropriate iterator builder.
     var iter = itertool.iter = function(obj){
         switch(__type(obj)){
+            case 'Number':
+            case 'RegExp':
+            case 'Null':        throw new TypeError;
             case 'String':      return StringIterator.apply(root, arguments);
             case 'Array':       return ArrayIterator.apply(root, arguments);
             case 'Iterator':    return obj;
             default:            return ObjectIterator.apply(root, arguments);
         }
+    };
+    
+    iter.stop = function(){
+        throw StopIteration;
     };
     
     // Converts the iterator to array. Do not use this 
@@ -215,16 +222,12 @@
     var cycle = itertool.cycle = function(iterable){
         var type = __type(iterable),
             iterConverted;
-        
-        if (type === 'Number' || type === 'RegExp' || type === 'Null')
-            throw new TypeError;
-    
-        iterable = iter(iterable);
-        
+
         var gen, size, idx, items = [];
         gen = extendIterator(function(){
             try {
-                var item = iterable.next();
+                if (!iterConverted) iterConverted = iter(iterable);
+                var item = iterConverted.next();
                 items.push(item);
                 return item;
             } catch (err) {
@@ -238,7 +241,6 @@
                     if (idx >= size) idx = 0;
                     return items[idx++];
                 };
-                
                 return gen.next();
             }
         });
@@ -261,7 +263,7 @@
                     count++;
                     return element;
                 }
-                throw StopIteration;
+                iter.stop();
             });
         }
     };
@@ -527,7 +529,7 @@
             if (numEndedIter < numIterables)
                 return result;
                 
-            throw StopIteration;
+            iter.stop();
         });
     };
     
@@ -539,11 +541,16 @@
     var starmap = itertool.starmap = function(callback, argList) {
         if (__type(callback) !== 'Function') throw new TypeError;
         
-        var iterable = iter(argList);
+        var iterable, gen;
+        return (gen = extendIterator(function(){
+            iterable = iter(argList);
             
-        return extendIterator(function(){
-            return callback.apply(root, iterable.next());
-        });
+            gen.next = function(){
+                return callback.apply(root, iterable.next());
+            };
+            
+            return gen.next();
+        }));
     };
     
     // Returns `n` number of iterators based on `iterable`. Note that the `iterable`
