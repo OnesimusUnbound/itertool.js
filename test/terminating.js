@@ -9,7 +9,7 @@ $(document).ready(function() {
     _(4).times(function(){ items.push(gen.next()); });
     equals(items.join(' '), 'A B 2 Test', 'chaining \'AB\', [2], and { "a" : "Test", "z" : "Unit" } 4 times');
     
-    raises(function(){ gen = itertool.chain('ZYX', 12); }, TypeError, 'number is not allowed in the argument');
+    raises(function(){ gen = itertool.chain('ZX', 12); gen.next(); gen.next(); gen.next(); }, TypeError, 'number is not allowed in the argument');
     
     gen = itertool.chain([1, 2, 3, 4]); items = []; itemCount = 0;
     _(4).times(function(){ gen.next(); itemCount++; });
@@ -120,7 +120,6 @@ $(document).ready(function() {
     try {
         for(i = 0; i < 100; i++)
             items.push(gen.next());
-            
     } catch(err) {
         if (err === StopIteration) {
             equals(items.join(''), '', 'islice with 0 as a first argument generates an empty array');
@@ -663,5 +662,49 @@ $(document).ready(function() {
         function(){ gen.next(); }, 
         function(actual){ return actual === StopIteration; },
         'raises StopIteration for groupby iterator');
+  });
+  test("terminating: enumerate", function() {
+    var items, gen, itemCount;
+    
+    gen = itertool.enumerate("ABCD"); items = [];
+    try {
+        for(i = 0; i < 100; i++)
+            items.push(gen.next());
+            
+    } catch (err) {
+        if (err === StopIteration) {
+            equals(
+                _.map(items, function(zippedItem){
+                    return '[' + zippedItem.join(' ') + ']';
+                }).join(', '),
+                '[0 A], [1 B], [2 C], [3 D]', 
+                'enumerate iterable, starting from 0 as default');
+        } else {
+            ok(false, "Only StopIteration should be raised. Raised " + err);
+        }
+    }
+    
+    gen = itertool.enumerate("ABCD", 10); items = [];
+    try {
+        for(i = 0; i < 100; i++)
+            items.push(gen.next());
+            
+    } catch (err) {
+        if (err === StopIteration) {
+            equals(
+                _.map(items, function(zippedItem){
+                    return '[' + zippedItem.join(' ') + ']';
+                }).join(', '),
+                '[10 A], [11 B], [12 C], [13 D]', 
+                'enumerate iterable, starting from 10 as default');
+        } else {
+            ok(false, "Only StopIteration should be raised. Raised " + err);
+        }
+    }
+    
+    raises(
+        function(){ var g = itertool.enumerate("A"); g.next(); g.next(); }, 
+        function(actual){ return actual === StopIteration; },
+        'raises StopIteration when the end has been reached');
   });
 });

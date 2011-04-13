@@ -9,10 +9,9 @@ v0.0.*
 v0.1.*
 ======
  - make the operations in the itertool more lazier
- - change Iterator to BaseIterator
+ - create helper functions to create itertools
  - add combinatoric functions
  
 v0.2.*
 ======
- - create api to create user defined Iterator built on BaseIterator
  - create extended generator functions built on top of the base generator functions (v0.0.* and v0.1.*) 

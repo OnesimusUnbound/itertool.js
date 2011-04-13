@@ -1,6 +1,7 @@
 In Progress
 ===========
-- make operations in all itertool functions `lazier`
+- make operations in all itertool functions `lazier` (tee not yet).
+
 
 Completed
 =========
@@ -23,3 +24,4 @@ Terminating
 - starmap
 - tee
 - groupby
+- enumerate

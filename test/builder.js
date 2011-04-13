@@ -133,18 +133,22 @@ $(document).ready(function() {
     raises(function(){ itertool.iter(); }, TypeError, 'empty parameter will raise TypeError');
   });
   
-  test("builder: toArray", function() {
-    var gen, obj = {a: 1, b: "Test", c: "xyz"};
+  test("builder: iter.stop", function() {
     
-    gen = itertool.iter("ABCDEF", /[BE]/); 
-    equals(itertool.toArray(gen).join(' '), 'A CD F', 'convert string iterator to array');
-        
-    gen = itertool.iter([1, 2, 4]); 
-    equals(itertool.toArray(gen).join(' '), '1 2 4', 'convert numeric iterator to array');
-
-    gen = itertool.iter(itertool.StringIterator('ABC'));
-    equals(itertool.toArray(gen).join(' '), 'A B C', 'convert string iterator to array');
-        
-    raises(function(){ itertool.toArray(); }, TypeError, 'empty parameter will raise TypeError');
+    raises(
+        function(){ itertool.iter.stop(); }, 
+        function(actual){ return actual === StopIteration; },
+        'StopIteration is raised');
   });
+  
+  test("builder: iter.create", function() {
+    var iter = itertool.iter.createIter(function(){
+        return "Test";
+    });
+    
+    equals(typeof iter.next, 'function', 'An iterator was created');
+    equals(iter.next(), 'Test', 'Returns the expected result');
+    
+  });
+  
 });
