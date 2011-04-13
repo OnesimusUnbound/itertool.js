@@ -1,7 +1,9 @@
 In Progress
 ===========
-- make operations in all itertool functions `lazier` (tee not yet).
-
+product
+permutations
+combinations
+combinations_with_replacement 
 
 Completed
 =========
