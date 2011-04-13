@@ -7,7 +7,7 @@ $(document).ready(function() {
     
     gen = itertool.chain('AB', [2], { "a" : "Test", "z" : "Unit" }); items = [];
     _(4).times(function(){ items.push(gen.next()); });
-    equals(items.join(' '), 'A B 2 Test', 'chaining \'AB\', [2], and { "a" : "Test", "z" : "Unit" } 4 times');
+    equals(items.join(' '), 'A B 2 Test', 'chaining \'AB\', [2], and { "a" : "Test", "z" : "Unit" }');
     
     raises(function(){ gen = itertool.chain('ZX', 12); gen.next(); gen.next(); gen.next(); }, TypeError, 'number is not allowed in the argument');
     
@@ -21,6 +21,30 @@ $(document).ready(function() {
     equals(
         itemCount, 
         4, 
+        'The number of iteration should match the total number of items in chained iters');
+  });
+  
+  test("terminating: chain_from_iterable", function() {
+    var items, gen, itemCount;
+    
+    gen = itertool.chain_from_iterable(['AB', [2], { "a" : "Test", "z" : "Unit" }]); items = [];
+    _(4).times(function(){ items.push(gen.next()); });
+    equals(items.join(' '), 'A B 2 Test', 'chaining [\'AB\', [2], { "a" : "Test", "z" : "Unit" }]');
+    
+    raises(function(){ 
+        gen = itertool.chain_from_iterable(['ZX', 12]); 
+        gen.next(); gen.next(); gen.next(); 
+    }, TypeError, 'number is not allowed in the argument');
+    
+    gen = itertool.chain_from_iterable([[1, 2, 3, 4]]); items = []; itemCount = 0;
+    _(4).times(function(){ gen.next(); itemCount++; });
+    raises(
+        function(){ gen.next(); itemCount++; }, 
+        function(actual){ return actual === StopIteration; }, 
+        'StopIteration should be raised');
+        
+    equals(
+        itemCount, 4, 
         'The number of iteration should match the total number of items in chained iters');
   });
   

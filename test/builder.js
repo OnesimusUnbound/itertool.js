@@ -141,7 +141,7 @@ $(document).ready(function() {
         'StopIteration is raised');
   });
   
-  test("builder: iter.create", function() {
+  test("builder: iter.createIter", function() {
     var iter = itertool.iter.createIter(function(){
         return "Test";
     });

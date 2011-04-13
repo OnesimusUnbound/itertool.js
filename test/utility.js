@@ -12,7 +12,7 @@ $(document).ready(function() {
     window.itertool = it.noConflict();
   });
   
-  test("builder: toArray", function() {
+  test("utility: toArray", function() {
     var gen, obj = {a: 1, b: "Test", c: "xyz"};
     
     gen = itertool.iter("ABCDEF", /[BE]/); 
