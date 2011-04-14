@@ -33,16 +33,6 @@
             }
         },
         
-        // Appends the properties of `other` to `obj`.
-        __extend = function(obj, other){
-            for (var prop in other){
-                if (__hasOwns.call(other, prop)) {
-                    obj[prop] = other[prop];
-                }
-            }
-            return obj;
-        },
-        
         // The functional `map` that calls the `callback` for each item in the `array`
         __map = function(array, callback){
             var result = [];
@@ -113,11 +103,20 @@
     
     // creates is an iterator for string.
     var StringIterator = itertool.StringIterator = function(string, option){
+        var items, size, idx;
+        
         if(__type(string) === 'Undefined') throw new TypeError;
-        
-        var items = [];
         option = option || "";
+        items = [];
         
+        if (option === "") {
+            size = string.length;
+            idx = 0;
+            return createIter(function(){
+                if (size > idx) return string.charAt(idx++);
+                iter.stop();
+            });
+        }
         switch(__type(option)){
             case 'String':
             case 'RegExp':
@@ -131,9 +130,11 @@
     // iterates through the objects property, excluding that of its prototype ("parent class").
     // `option` determines how the object is iterated
     var ObjectIterator = itertool.ObjectIterator = function(obj, option) {
+        var items;
+        
         if(__type(obj) === 'Undefined') throw new TypeError;
-    
-        var items = [];
+        items = [];
+        option = option || 'values';
         
         for (var key in obj){
             if (__hasOwns.call(obj, key)){
@@ -183,7 +184,33 @@
     // A helper function to instantiate Iterator and implement the 
     // instance's `next` function in `nextImpl`
     var createIter = iter.createIter = function(nextImpl) {
-        return __extend(new Iterator, {next: nextImpl});
+        var iter = new Iterator;
+        setNext(iter, nextImpl);
+        return iter;
+    };
+    
+    var iterClone = function(iterable) {
+        this.queue = []; 
+        this.iterableConv = null;
+        this.cloneIter = function() {
+            var idx = 0, iterCloneThis = this;
+            return createIter(function(){
+                if (!iterCloneThis.iterableConv) 
+                    iterCloneThis.iterableConv = iter(iterable);
+                
+                return setAndRunNext(this, function(){
+                    if (idx >= iterCloneThis.queue.length) 
+                        iterCloneThis.queue.push(
+                            iterCloneThis.iterableConv.next());
+                    
+                    return iterCloneThis.queue[idx++];
+                });
+            });
+        };
+    };
+    
+    var iterCloner = iter.iterCloner = function(iterable) {
+        return new iterClone(iterable);
     };
 
     // Utility Functions
@@ -531,11 +558,6 @@
         
         init = function(){
             iterables = __map(iterables, function(iterable){
-                var type = __type(iterable);
-                
-                if (type === 'Number' || type === 'RegExp') 
-                    throw new TypeError;
-                    
                 return iter(iterable);
             });
             
@@ -620,27 +642,14 @@
     //
     // `tee(iterable, n = 2)`
     var tee = itertool.tee = function(iterable, n) {
-        var queue, iterableConv, teeIterables;
+        var cloner, teeItrables;
             
         n = n || 2;
-        queue = [];
+        cloner = iterCloner(iterable);
         teeItrables = [];
-        createIterWithIdx = function(idx){
-            return createIter(function(){
-                if (!iterableConv) 
-                    iterableConv = iter(iterable);
-                
-                return setAndRunNext(this, function(){
-                    if (idx >= queue.length) 
-                        queue.push(iterableConv.next());
-                    
-                    return queue[idx++];
-                });
-            });
-        };
             
         for(var i = 0; i < n; i++) {
-            teeItrables.push(createIterWithIdx(0));
+            teeItrables.push(cloner.cloneIter());
         }
         
         return teeItrables;
@@ -710,8 +719,14 @@
         return createIter(init);
     };
     
+    var product_object = function(iterable){
+        this.cloner = iterCloner(iterable);
+        this.iterator = this.cloner.cloneIter()
+        this.value = null;
+    };
+    
     // Library version (Major.Minor.Build)
-    itertool.VERSION = '0.1.2';
+    itertool.VERSION = '0.1.1';
     
     // CommonJS `module` is defined
     if (typeof module !== 'undefined' && module.exports) {
