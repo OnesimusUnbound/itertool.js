@@ -1,20 +1,17 @@
 In Progress
 ===========
-product
 permutations
 combinations
 combinations_with_replacement 
 
 Completed
 =========
-Infinite
-========
+# Infinite
 - counter (Python's count)
 - cycle
 - repeat
 
-Terminating
-===========
+# Terminating
 - chain
 - compress
 - dropwhile
@@ -27,3 +24,6 @@ Terminating
 - tee
 - groupby
 - enumerate
+
+# Combinatronic
+- product

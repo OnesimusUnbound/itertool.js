@@ -737,6 +737,9 @@
         result[depth] = cur_prod_obj.value;
     };
     
+    // Returns the cartesian product of `iterables` and `repeat`.
+    //
+    // `product(repeat, iterables...)`
     var product = itertool.product = function(repeat){
         var iterables, iterCloners, n_iter, n_all, result, first_run,
             init, main;
@@ -769,16 +772,19 @@
                     result[i] = iterCloners[i].value;
                     
                 first_run = false;
+                if (!n_all) {
+                    setNext(this, iter.stop);
+                }
             } else {
                 product_rewrite(result, iterCloners, n_all - 1, n_all - 1);
             }
-            return result;
+            return __slice.call(result);
         };
         return createIter(init);
     };
     
     // Library version (Major.Minor.Build)
-    itertool.VERSION = '0.1.1';
+    itertool.VERSION = '0.1.2';
     
     // CommonJS `module` is defined
     if (typeof module !== 'undefined' && module.exports) {
