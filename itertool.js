@@ -720,17 +720,15 @@
     };
     
     var product_rewrite = function(result, productObjs, depth, max_depth) {
-        var cur_prod_obj = productObjs[depth],
-            is_first_depth = depth === 0;
+        var cur_prod_obj, is_first_depth;
         
+        cur_prod_obj = productObjs[depth];
+        is_first_depth = depth === 0;
         try {
             cur_prod_obj.value = cur_prod_obj.iterator.next();
         } catch (err) {
-            if (err !== StopIteration)
-                throw err;
-                
-            if (is_first_depth)
-                iter.stop();
+            if (err !== StopIteration) throw err;
+            if (is_first_depth) iter.stop();
             
             cur_prod_obj.iterator = cur_prod_obj.cloner.cloneIter();
             cur_prod_obj.value = cur_prod_obj.iterator.next();
@@ -740,16 +738,14 @@
     };
     
     var product = itertool.product = function(repeat){
-        var num, iterables, iterCloners, n_iter, n_all, result, first_run,
+        var iterables, iterCloners, n_iter, n_all, result, first_run,
             init, main;
-        
         iterables = __slice.call(arguments, 1);
         first_run = true;
         init = function() {
             n_iter = iterables.length;
             n_all = repeat * n_iter;
             iterCloners = new Array(n_all);
-            
             for (var idx_iter = 0; idx_iter < n_iter; idx_iter++) {
                 var iterable = tee(iterables[idx_iter], repeat);
                 
@@ -767,7 +763,6 @@
             result = new Array(n_all);
             return setAndRunNext(this, main);
         };
-        
         main = function(){
             if (first_run) {
                 for (var i = 0; i < n_all; i++)
@@ -779,7 +774,6 @@
             }
             return result;
         };
-        
         return createIter(init);
     };
     
