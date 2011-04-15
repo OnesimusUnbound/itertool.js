@@ -209,7 +209,7 @@
         };
     };
     
-    var iterCloner = iter.iterCloner = function(iterable) {
+    var createIterCloner = iter.createIterCloner = function(iterable) {
         return new iterClone(iterable);
     };
 
@@ -645,7 +645,7 @@
         var cloner, teeItrables;
             
         n = n || 2;
-        cloner = iterCloner(iterable);
+        cloner = createIterCloner(iterable);
         teeItrables = [];
             
         for(var i = 0; i < n; i++) {
@@ -719,10 +719,68 @@
         return createIter(init);
     };
     
-    var product_object = function(iterable){
-        this.cloner = iterCloner(iterable);
-        this.iterator = this.cloner.cloneIter()
-        this.value = null;
+    var product_rewrite = function(result, productObjs, depth, max_depth) {
+        var cur_prod_obj = productObjs[depth],
+            is_first_depth = depth === 0;
+        
+        try {
+            cur_prod_obj.value = cur_prod_obj.iterator.next();
+        } catch (err) {
+            if (err !== StopIteration)
+                throw err;
+                
+            if (is_first_depth)
+                iter.stop();
+            
+            cur_prod_obj.iterator = cur_prod_obj.cloner.cloneIter();
+            cur_prod_obj.value = cur_prod_obj.iterator.next();
+            product_rewrite(result, productObjs, depth - 1, max_depth);
+        }
+        result[depth] = cur_prod_obj.value;
+    };
+    
+    var product = itertool.product = function(repeat){
+        var num, iterables, iterCloners, n_iter, n_all, result, first_run,
+            init, main;
+        
+        iterables = __slice.call(arguments, 1);
+        first_run = true;
+        init = function() {
+            n_iter = iterables.length;
+            n_all = repeat * n_iter;
+            iterCloners = new Array(n_all);
+            
+            for (var idx_iter = 0; idx_iter < n_iter; idx_iter++) {
+                var iterable = tee(iterables[idx_iter], repeat);
+                
+                for (var idx_rep = 0; idx_rep < repeat; idx_rep++) {
+                    var cur_cloner = createIterCloner(iterable[idx_rep]),
+                        cur_iterator = cur_cloner.cloneIter();
+                        
+                    iterCloners[idx_rep * n_iter + idx_iter] = {
+                        cloner:     cur_cloner,
+                        iterator:   cur_iterator,
+                        value:      cur_iterator.next()
+                    };
+                }
+            }
+            result = new Array(n_all);
+            return setAndRunNext(this, main);
+        };
+        
+        main = function(){
+            if (first_run) {
+                for (var i = 0; i < n_all; i++)
+                    result[i] = iterCloners[i].value;
+                    
+                first_run = false;
+            } else {
+                product_rewrite(result, iterCloners, n_all - 1, n_all - 1);
+            }
+            return result;
+        };
+        
+        return createIter(init);
     };
     
     // Library version (Major.Minor.Build)
