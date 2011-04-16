@@ -92,7 +92,7 @@
         __sort = (function(){
             var quick_sort = function(array) {
                 var sortedArray = __slice.call(array);
-                qsort(sortedArray, 0, array.length);
+                qsort(sortedArray, 0, sortedArray.length);
                 return sortedArray;
             }
 
@@ -138,7 +138,7 @@
                 case 'Array':
                     if (item1.length !== item2.length) return false;
                     for (var i = 0; i < item1.length; i++) {
-                        if (__eq(item1[i], item2[i])) return false;
+                        if (!__eq(item1[i], item2[i])) return false;
                     }
                     return true;
                 default:            throw new TypeError("Cannot compare object");
@@ -920,6 +920,43 @@
             try {
                 while(true) {
                     indices = idxIter.next();
+                    if (__eq(__sort(indices), indices)) {
+                        return __map(indices, function(index){
+                            return pool[index];
+                        });
+                    }
+                }
+            }  catch (err) {
+                if (err !== StopIteration) throw err;
+                setAndRunNext(this, iter.stop);
+            }
+        };
+        return createIter(init);
+    };
+    
+    var combinations_with_replacement 
+        = itertool.combinations_with_replacement = function(iterable, r) {
+        var idxIter, pool, n, r,
+            init, main;
+        init = function(){
+            switch(__type(iterable)) {
+                case 'Array':   pool = iterable; break;
+                case 'String':  pool = iterable.split(''); break;
+                default:        pool = toArray(iter(iterable));
+            }
+            n = pool.length;
+            r = r || n;
+            if (r > n) {
+                setAndRunNext(this, iter.stop);
+            }
+            idxIter = product(r, irange(n));
+            return setAndRunNext(this, main);
+        };
+        main = function(){
+            var indices;
+            try {
+                while(true) {
+                    indices = idxIter.next();
                     if (__eq(__sort(indices), indices))
                         return __map(indices, function(index){
                             return pool[index];
@@ -932,8 +969,6 @@
         };
         return createIter(init);
     };
-    
-    
     
     // Library version (Major.Minor.Build)
     itertool.VERSION = '0.1.2';

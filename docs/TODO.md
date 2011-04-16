@@ -1,8 +1,8 @@
 In Progress
 ===========
-permutations
-combinations
-combinations_with_replacement 
+permutations (for testing)
+combinations (for testing)
+combinations_with_replacement (for testing)
 
 Completed
 =========
