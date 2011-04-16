@@ -132,7 +132,7 @@
         // quick and dirty eq :(
         __eq = function(item1, item2) {
             switch(__type(item1)){
-                case 'Null':        throw new TypeError("Cannot compare null object");
+                case 'Null':        throw new TypeError;
                 case 'Number':      
                 case 'String':      return item1 === item2;
                 case 'Array':
@@ -141,7 +141,7 @@
                         if (!__eq(item1[i], item2[i])) return false;
                     }
                     return true;
-                default:            throw new TypeError("Cannot compare object");
+                default:            throw new TypeError;
             }
         },
         
@@ -866,6 +866,8 @@
     var permutations = itertool.permutations = function(iterable, r) {
         var idxIter, pool, n, r,
             init, main;
+        
+        if (!iterable) throw new TypeError;
         init = function(){
             switch(__type(iterable)) {
                 case 'Array':   pool = iterable; break;
@@ -901,6 +903,8 @@
     var combinations = itertool.combinations = function(iterable, r) {
         var idxIter, pool, n, r,
             init, main;
+        
+        if (!iterable) throw new TypeError;
         init = function(){
             switch(__type(iterable)) {
                 case 'Array':   pool = iterable; break;
@@ -938,6 +942,8 @@
         = itertool.combinations_with_replacement = function(iterable, r) {
         var idxIter, pool, n, r,
             init, main;
+        
+        if (!iterable) throw new TypeError;
         init = function(){
             switch(__type(iterable)) {
                 case 'Array':   pool = iterable; break;
@@ -946,9 +952,7 @@
             }
             n = pool.length;
             r = r || n;
-            if (r > n) {
-                setAndRunNext(this, iter.stop);
-            }
+            
             idxIter = product(r, irange(n));
             return setAndRunNext(this, main);
         };
