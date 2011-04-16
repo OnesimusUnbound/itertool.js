@@ -1,8 +1,5 @@
 In Progress
 ===========
-permutations (for testing)
-combinations (for testing)
-combinations_with_replacement (for testing)
 
 Completed
 =========
@@ -27,3 +24,7 @@ Completed
 
 # Combinatronic
 - product
+- permutations
+- combinations
+- combinations_with_replacement
+
