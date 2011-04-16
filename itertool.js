@@ -65,7 +65,27 @@
         root = this, 
         
         // stores the content of previously defined `itertool` in the global scope to avoid overriding it
-        __previous_itertool = root.itertool, 
+        __previous_itertool = root.itertool,
+        
+        __isMemberOf = function(item, array){
+            for(var idx = 0; idx < array.length; idx++) {
+                if(array[idx] === item)
+                    return true;
+            }
+            return false;
+        },
+        
+        __uniq = function(iterable){
+            var uniq = [];
+            
+            __map(iterable, function(item){
+                if (!__isMemberOf(item, uniq)){
+                    uniq.push(item);
+                }
+            });
+            
+            return uniq;
+        }, 
         
         // set up the namespace of the itertool
         itertool = {},
@@ -319,7 +339,8 @@
     // Terminating Iterators
     // ---------------------
     // 
-    // Terminating iterators creates itrators that will surely terminate (unless you passed an infinite iterable!)
+    // Terminating iterators creates itrators that will surely terminate 
+    // (unless you passed an infinite iterable!)
     
     // This will create iterator that "concatenate" all iterables passed, creating one iterable
     // 
@@ -741,44 +762,80 @@
     //
     // `product(repeat, iterables...)`
     var product = itertool.product = function(repeat){
-        var iterables, iterCloners, n_iter, n_all, result, first_run,
-            init, main;
+        var iterables, iterCloners, n_iter, n_all, result,
+            init, first_run, main;
         iterables = __slice.call(arguments, 1);
-        first_run = true;
         init = function() {
-            n_iter = iterables.length;
-            n_all = repeat * n_iter;
-            iterCloners = new Array(n_all);
-            for (var idx_iter = 0; idx_iter < n_iter; idx_iter++) {
-                var iterable = tee(iterables[idx_iter], repeat);
-                
-                for (var idx_rep = 0; idx_rep < repeat; idx_rep++) {
-                    var cur_cloner = createIterCloner(iterable[idx_rep]),
-                        cur_iterator = cur_cloner.cloneIter();
-                        
-                    iterCloners[idx_rep * n_iter + idx_iter] = {
-                        cloner:     cur_cloner,
-                        iterator:   cur_iterator,
-                        value:      cur_iterator.next()
-                    };
+            try {
+                n_iter = iterables.length;
+                n_all = repeat * n_iter;
+                iterCloners = new Array(n_all);
+                for (var idx_iter = 0; idx_iter < n_iter; idx_iter++) {
+                    var iterable = tee(iterables[idx_iter], repeat);
+                    
+                    for (var idx_rep = 0; idx_rep < repeat; idx_rep++) {
+                        var cur_cloner = createIterCloner(iterable[idx_rep]),
+                            cur_iterator = cur_cloner.cloneIter();
+                            
+                        iterCloners[idx_rep * n_iter + idx_iter] = {
+                            cloner:     cur_cloner,
+                            iterator:   cur_iterator,
+                            value:      cur_iterator.next()
+                        };
+                    }
                 }
+            } catch (err) {
+                if (err !== StopIteration) throw err;
+                setAndRunNext(this, iter.stop);
             }
             result = new Array(n_all);
+            return setAndRunNext(this, first_run);
+        };
+        first_run = function(){
+            for (var i = 0; i < n_all; i++)
+                result[i] = iterCloners[i].value;
+            
+            setNext(this, n_all ? main : iter.stop);
+            return __slice.call(result);
+        };
+        main = function(){
+            product_rewrite(result, iterCloners, n_all - 1, n_all - 1);
+            return __slice.call(result);
+        };
+        return createIter(init);
+    };
+    
+    var permutations = itertool.permutations = function(iterable, r) {
+        var idxIter, pool, n, r,
+            init, main;
+        init = function(){
+            switch(__type(iterable)) {
+                case 'Array':   pool = iterable; break;
+                case 'String':  pool = iterable.split(''); break;
+                default:        pool = toArray(iter(iterable));
+            }
+            n = pool.length;
+            r = r || n;
+            if (r > n) {
+                setAndRunNext(this, iter.stop);
+            }
+            idxIter = product(r, irange(n));
             return setAndRunNext(this, main);
         };
         main = function(){
-            if (first_run) {
-                for (var i = 0; i < n_all; i++)
-                    result[i] = iterCloners[i].value;
-                    
-                first_run = false;
-                if (!n_all) {
-                    setNext(this, iter.stop);
+            var indices;
+            try {
+                while(true) {
+                    indices = idxIter.next();
+                    if (__uniq(indices).length === r)
+                        return __map(indices, function(index){
+                            return pool[index];
+                        });
                 }
-            } else {
-                product_rewrite(result, iterCloners, n_all - 1, n_all - 1);
+            }  catch (err) {
+                if (err !== StopIteration) throw err;
+                setAndRunNext(this, iter.stop);
             }
-            return __slice.call(result);
         };
         return createIter(init);
     };
