@@ -87,6 +87,64 @@
             return uniq;
         }, 
         
+        // Based on quicksort in http://en.literateprograms.org/Quicksort_(JavaScript)
+        // See http://en.literateprograms.org/Quicksort_%28JavaScript%29?action=history for authors
+        __sort = (function(){
+            var quick_sort = function(array) {
+                var sortedArray = __slice.call(array);
+                qsort(sortedArray, 0, array.length);
+                return sortedArray;
+            }
+
+            var qsort = function(array, begin, end) {
+                if(end - 1 > begin) {
+                    var pivot = begin + Math.floor(Math.random() * (end - begin));
+                    pivot = partition(array, begin, end, pivot);
+                    qsort(array, begin, pivot);
+                    qsort(array, pivot+1, end);
+                }
+            };
+            
+            var partition = function(array, begin, end, pivot) {
+                var piv = array[pivot];
+                swap(array, pivot, end - 1);
+                var store = begin;
+                var ix;
+                for(ix = begin; ix < end - 1; ++ix) {
+                    if(array[ix] <= piv) {
+                        swap(array, store, ix);
+                        ++store;
+                    }
+                }
+                swap(array, end - 1, store);
+                return store;
+            };
+
+            var swap = function(array, a, b) {
+                var tmp = array[a];
+                array[a] = array[b];
+                array[b] = tmp;
+            };
+            
+            return quick_sort;
+        })(),
+        
+        // quick and dirty eq :(
+        __eq = function(item1, item2) {
+            switch(__type(item1)){
+                case 'Null':        throw new TypeError("Cannot compare null object");
+                case 'Number':      
+                case 'String':      return item1 === item2;
+                case 'Array':
+                    if (item1.length !== item2.length) return false;
+                    for (var i = 0; i < item1.length; i++) {
+                        if (__eq(item1[i], item2[i])) return false;
+                    }
+                    return true;
+                default:            throw new TypeError("Cannot compare object");
+            }
+        },
+        
         // set up the namespace of the itertool
         itertool = {},
         
@@ -839,6 +897,43 @@
         };
         return createIter(init);
     };
+
+    var combinations = itertool.combinations = function(iterable, r) {
+        var idxIter, pool, n, r,
+            init, main;
+        init = function(){
+            switch(__type(iterable)) {
+                case 'Array':   pool = iterable; break;
+                case 'String':  pool = iterable.split(''); break;
+                default:        pool = toArray(iter(iterable));
+            }
+            n = pool.length;
+            r = r || n;
+            if (r > n) {
+                setAndRunNext(this, iter.stop);
+            }
+            idxIter = permutations(irange(n), r);
+            return setAndRunNext(this, main);
+        };
+        main = function(){
+            var indices;
+            try {
+                while(true) {
+                    indices = idxIter.next();
+                    if (__eq(__sort(indices), indices))
+                        return __map(indices, function(index){
+                            return pool[index];
+                        });
+                }
+            }  catch (err) {
+                if (err !== StopIteration) throw err;
+                setAndRunNext(this, iter.stop);
+            }
+        };
+        return createIter(init);
+    };
+    
+    
     
     // Library version (Major.Minor.Build)
     itertool.VERSION = '0.1.2';
