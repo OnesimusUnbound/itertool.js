@@ -88,43 +88,46 @@
         }, 
         
         // Based on quicksort in http://en.literateprograms.org/Quicksort_(JavaScript)
-        // See http://en.literateprograms.org/Quicksort_%28JavaScript%29?action=history for authors
+        // Authors: http://en.literateprograms.org/Quicksort_%28JavaScript%29?action=history
         __sort = (function(){
-            var quick_sort = function(array) {
-                var sortedArray = __slice.call(array);
-                qsort(sortedArray, 0, sortedArray.length);
-                return sortedArray;
-            }
-
-            var qsort = function(array, begin, end) {
-                if(end - 1 > begin) {
-                    var pivot = begin + Math.floor(Math.random() * (end - begin));
-                    pivot = partition(array, begin, end, pivot);
-                    qsort(array, begin, pivot);
-                    qsort(array, pivot+1, end);
-                }
-            };
-            
-            var partition = function(array, begin, end, pivot) {
-                var piv = array[pivot];
-                swap(array, pivot, end - 1);
-                var store = begin;
-                var ix;
-                for(ix = begin; ix < end - 1; ++ix) {
-                    if(array[ix] <= piv) {
-                        swap(array, store, ix);
-                        ++store;
+            var __random = Math.random,
+                __floor = Math.floor, 
+                
+                quick_sort = function(array) {
+                    var sortedArray = __slice.call(array);
+                    qsort(sortedArray, 0, sortedArray.length);
+                    return sortedArray;
+                },
+                
+                qsort = function(array, begin, end) {
+                    if(end - 1 > begin) {
+                        var pivot = begin + __floor(__random() * (end - begin));
+                        pivot = partition(array, begin, end, pivot);
+                        qsort(array, begin, pivot);
+                        qsort(array, pivot+1, end);
                     }
-                }
-                swap(array, end - 1, store);
-                return store;
-            };
-
-            var swap = function(array, a, b) {
-                var tmp = array[a];
-                array[a] = array[b];
-                array[b] = tmp;
-            };
+                },
+                
+                partition = function(array, begin, end, pivot) {
+                    var piv = array[pivot];
+                    swap(array, pivot, end - 1);
+                    var store = begin;
+                    var ix;
+                    for(ix = begin; ix < end - 1; ++ix) {
+                        if(array[ix] <= piv) {
+                            swap(array, store, ix);
+                            ++store;
+                        }
+                    }
+                    swap(array, end - 1, store);
+                    return store;
+                },
+                
+                swap = function(array, a, b) {
+                    var tmp = array[a];
+                    array[a] = array[b];
+                    array[b] = tmp;
+                };
             
             return quick_sort;
         })(),
@@ -145,151 +148,166 @@
             }
         },
         
+        
+        
+        
         // set up the namespace of the itertool
         itertool = {},
         
         // `StopIteration` is an exception thrown whenever the generator is completed
-        StopIteration;
-    
-    // To use either the global `StopIteration` (Mozilla's JS engines) or implement one.
-    if (!root.StopIteration) {
-        StopIteration = root.StopIteration = Error('StopIteration');
-    } else {
-        StopIteration = root.StopIteration;
-    }
-    itertool.StopIteration = StopIteration;
-    
-    // `Iterator` the basic iterator from which derived iterators will reference. 
-    // This is will not use Mozilla's `Iterator`, instead it will be made compatible
-    // with Mozilla's implementation.
-    var Iterator = itertool.Iterator = function(){};
-    Iterator.prototype.next = function(){ throw StopIteration; };
-    Iterator.prototype.__iterator__ = function(){ return this; };
-    
-    // Creates an iterator for array
-    var ArrayIterator = itertool.ArrayIterator = function(array) {
-        if(__type(array) === 'Undefined') throw new TypeError;
-    
-        var size = array.length,
-            idx = 0;
+        StopIteration = (function(){
+            // To use either the global `StopIteration` (Mozilla's JS engines) or implement one.
+            itertool.StopIteration = root.StopIteration || (root.StopIteration = Error('StopIteration'));
+            return itertool.StopIteration;
+        })(),
         
-        return createIter(function(){
-            if (size > idx) return array[idx++];
-            iter.stop();
-        });
-    };
-    
-    // creates is an iterator for string.
-    var StringIterator = itertool.StringIterator = function(string, option){
-        var items, size, idx;
+        // raises StopIteration
+        stopImpl = function(){
+            throw StopIteration;
+        },
         
-        if(__type(string) === 'Undefined') throw new TypeError;
-        option = option || "";
-        items = [];
+        // `Iterator` the basic iterator from which derived iterators will reference. 
+        // This is will not use Mozilla's `Iterator`, instead it will be made compatible
+        // with Mozilla's implementation.
+        Iterator = (function(){
+            var __class = itertool.Iterator = function(){};
+            __class.prototype.next = stopImpl;
+            __class.prototype.__iterator__ = function(){ return this; };
+            
+            return __class;
+        })(),
         
-        if (option === "") {
-            size = string.length;
-            idx = 0;
+        // Creates an iterator for array
+        ArrayIterator = itertool.ArrayIterator = function(array) {
+            if(__type(array) === 'Undefined') throw new TypeError;
+        
+            var size = array.length,
+                idx = 0;
+            
             return createIter(function(){
-                if (size > idx) return string.charAt(idx++);
-                iter.stop();
+                if (size > idx) return array[idx++];
+                return setAndRunNext(this, stopImpl);
             });
-        }
-        switch(__type(option)){
-            case 'String':
-            case 'RegExp':
-                items = string.split(option);
-                break;
-        }
-        
-        return ArrayIterator(items);
-    }
+        },
     
-    // iterates through the objects property, excluding that of its prototype ("parent class").
-    // `option` determines how the object is iterated
-    var ObjectIterator = itertool.ObjectIterator = function(obj, option) {
-        var items;
-        
-        if(__type(obj) === 'Undefined') throw new TypeError;
-        items = [];
-        option = option || 'values';
-        
-        for (var key in obj){
-            if (__hasOwns.call(obj, key)){
-                switch(option){
-                    case 'keys'     : items.push(key); break;
-                    case 'all'      : items.push([key, obj[key]]); break;
-                    case 'values'   :
-                    default         : items.push(obj[key]);
+        // creates is an iterator for string.
+        StringIterator = itertool.StringIterator = function(string, option){
+            var items, size, idx;
+            
+            if(__type(string) === 'Undefined') throw new TypeError;
+            option = option || "";
+            items = [];
+            
+            if (option === "") {
+                size = string.length;
+                idx = 0;
+                return createIter(function(){
+                    if (size > idx) return string.charAt(idx++);
+                    return setAndRunNext(this, stopImpl);
+                });
+            }
+            switch(__type(option)){
+                case 'String':
+                case 'RegExp':
+                    items = string.split(option);
+                    break;
+            }
+            
+            return ArrayIterator(items);
+        },
+    
+        // iterates through the objects property, excluding that of its prototype ("parent class").
+        // `option` determines how the object is iterated
+        ObjectIterator = itertool.ObjectIterator = function(obj, option) {
+            var items, key;
+            
+            if(__type(obj) === 'Undefined') throw new TypeError;
+            items = [];
+            option = option || 'values';
+            
+            for (key in obj){
+                if (__hasOwns.call(obj, key)){
+                    switch(option){
+                        case 'keys'     : items.push(key); break;
+                        case 'all'      : items.push([key, obj[key]]); break;
+                        case 'values'   :
+                        default         : items.push(obj[key]);
+                    }
                 }
             }
-        }
+            
+            return ArrayIterator(items);
+        },
+    
+        // Accepts string, array, objects and creates the equivalent 
+        // iterator by delegating to appropriate iterator builder.
+        iter = (function(){
+            var __class = itertool.iter = function(obj){
+                switch(__type(obj)){
+                    case 'Number':
+                    case 'RegExp':
+                    case 'Null':        throw new TypeError;
+                    case 'String':      return StringIterator.apply(root, arguments);
+                    case 'Array':       return ArrayIterator.apply(root, arguments);
+                    case 'Iterator':    return obj;
+                    default:            return ObjectIterator.apply(root, arguments);
+                }
+            };
+            
+            // raises StopIteration
+            __class.stop = stopImpl;
+            
+            // Sets the `next` function of `iterator` with `nextCallback`.
+            __class.setNext = function(iterator, nextCallabck) {
+                iterator.next = nextCallabck;
+            };
+            
+            // Sets the `next` function of `gen` with `nextCallback` 
+            // and then execute the newly assigned `next`.
+            __class.setAndRunNext = function(iterator, nextCallback) {
+                setNext(iterator, nextCallback);
+                return iterator.next();
+            };
+            
+            // A helper function to instantiate Iterator and implement the 
+            // instance's `next` function in `nextImpl`
+            __class.createIter = function(nextImpl) {
+                var iter = new Iterator;
+                setNext(iter, nextImpl);
+                return iter;
+            };
+            
+            var iterClone = function(iterable) {
+                this.queue = []; 
+                this.iterableConv = null;
+                this.cloneIter = function() {
+                    var idx = 0, iterCloneThis = this;
+                    return createIter(function(){
+                        if (!iterCloneThis.iterableConv) 
+                            iterCloneThis.iterableConv = iter(iterable);
+                        
+                        return setAndRunNext(this, function(){
+                            if (idx >= iterCloneThis.queue.length) 
+                                iterCloneThis.queue.push(
+                                    iterCloneThis.iterableConv.next());
+                            
+                            return iterCloneThis.queue[idx++];
+                        });
+                    });
+                };
+            };
         
-        return ArrayIterator(items);
-    };
-    
-    // Accepts string, array, objects and creates the equivalent 
-    // iterator by delegating to appropriate iterator builder.
-    var iter = itertool.iter = function(obj){
-        switch(__type(obj)){
-            case 'Number':
-            case 'RegExp':
-            case 'Null':        throw new TypeError;
-            case 'String':      return StringIterator.apply(root, arguments);
-            case 'Array':       return ArrayIterator.apply(root, arguments);
-            case 'Iterator':    return obj;
-            default:            return ObjectIterator.apply(root, arguments);
-        }
-    };
-    
-    // raises StopIteration
-    iter.stop = function(){
-        throw StopIteration;
-    };
-    
-    // Sets the `next` function of `iterator` with `nextCallback`.
-    var setNext = iter.setNext = function(iterator, nextCallabck) {
-        iterator.next = nextCallabck;
-    };
-    
-    // Sets the `next` function of `gen` with `nextCallback` 
-    // and then execute the newly assigned `next`.
-    var setAndRunNext = iter.setAndRunNext = function(iterator, nextCallback) {
-        setNext(iterator, nextCallback);
-        return iterator.next();
-    };
-
-    // A helper function to instantiate Iterator and implement the 
-    // instance's `next` function in `nextImpl`
-    var createIter = iter.createIter = function(nextImpl) {
-        var iter = new Iterator;
-        setNext(iter, nextImpl);
-        return iter;
-    };
-    
-    var iterClone = function(iterable) {
-        this.queue = []; 
-        this.iterableConv = null;
-        this.cloneIter = function() {
-            var idx = 0, iterCloneThis = this;
-            return createIter(function(){
-                if (!iterCloneThis.iterableConv) 
-                    iterCloneThis.iterableConv = iter(iterable);
-                
-                return setAndRunNext(this, function(){
-                    if (idx >= iterCloneThis.queue.length) 
-                        iterCloneThis.queue.push(
-                            iterCloneThis.iterableConv.next());
-                    
-                    return iterCloneThis.queue[idx++];
-                });
-            });
-        };
-    };
-    
-    var createIterCloner = iter.createIterCloner = function(iterable) {
-        return new iterClone(iterable);
-    };
+            __class.createIterCloner = function(iterable) {
+                return new iterClone(iterable);
+            };
+            
+            return __class;
+        })(),
+        
+        setNext = iter.setNext,
+        setAndRunNext = iter.setAndRunNext,
+        createIter = iter.createIter,
+        createIterCloner = iter.createIterCloner;
 
     // Utility Functions
     // -----------------
@@ -354,12 +372,12 @@
                 return item;
             } catch (err) {
                 if (err !== StopIteration) {
-                    setNext(this, iter.stop);
+                    setNext(this, stopImpl);
                     throw err;
                 }
                  
                 if (!(size = items.length)){
-                    return setAndRunNext(this, iter.stop);
+                    return setAndRunNext(this, stopImpl);
                 }
                 
                 idx = 0; 
@@ -389,7 +407,7 @@
                     count++;
                     return element;
                 }
-                iter.stop();
+                return setAndRunNext(this, stopImpl);
             });
         }
     };
@@ -420,13 +438,13 @@
                 return currentIter.next();
             } catch (err) {
                 if (err !== StopIteration) {
-                    setNext(iter.stop);
+                    setNext(stopImpl);
                     throw err;
                 }
                 if (size > iterIdx) {
                     return setAndRunNext(this, init);
                 }
-                iter.stop();
+                return setAndRunNext(this, stopImpl);
             }
         };
         
@@ -461,7 +479,7 @@
                 idx++;
                 return (start += step);
             }
-            iter.stop();
+            return setAndRunNext(this, stopImpl);
         });
     };
     
@@ -537,7 +555,7 @@
         main = function(){
             if (predicate(takenItem = iterable.next()))
                 return takenItem;
-            return setAndRunNext(this, iter.stop);
+            return setAndRunNext(this, stopImpl);
         };
         
         return createIter(init);
@@ -648,7 +666,7 @@
                     return iterable.next();
                 });
                     
-            iter.stop();
+            return setAndRunNext(this, stopImpl);
         };
         return createIter(init);
     };
@@ -690,7 +708,7 @@
             if (numEndedIter < numIterables)
                 return result;
                 
-            iter.stop();
+            return setAndRunNext(this, stopImpl);
         };
         
         return createIter(init);
@@ -773,7 +791,7 @@
                     return retvalue;
                 } 
                 
-                iter.stop();
+                stopImpl();
             });
         };
         return createIter(init);
@@ -807,7 +825,7 @@
             cur_prod_obj.value = cur_prod_obj.iterator.next();
         } catch (err) {
             if (err !== StopIteration) throw err;
-            if (is_first_depth) iter.stop();
+            if (is_first_depth) stopImpl();
             
             cur_prod_obj.iterator = cur_prod_obj.cloner.cloneIter();
             cur_prod_obj.value = cur_prod_obj.iterator.next();
@@ -844,7 +862,7 @@
                 }
             } catch (err) {
                 if (err !== StopIteration) throw err;
-                setAndRunNext(this, iter.stop);
+                setAndRunNext(this, stopImpl);
             }
             result = new Array(n_all);
             return setAndRunNext(this, first_run);
@@ -853,7 +871,7 @@
             for (var i = 0; i < n_all; i++)
                 result[i] = iterCloners[i].value;
             
-            setNext(this, n_all ? main : iter.stop);
+            setNext(this, n_all ? main : stopImpl);
             return __slice.call(result);
         };
         main = function(){
@@ -877,7 +895,7 @@
             n = pool.length;
             r = r || n;
             if (r > n) {
-                setAndRunNext(this, iter.stop);
+                setAndRunNext(this, stopImpl);
             }
             idxIter = product(r, irange(n));
             return setAndRunNext(this, main);
@@ -894,7 +912,7 @@
                 }
             }  catch (err) {
                 if (err !== StopIteration) throw err;
-                setAndRunNext(this, iter.stop);
+                setAndRunNext(this, stopImpl);
             }
         };
         return createIter(init);
@@ -914,7 +932,7 @@
             n = pool.length;
             r = r || n;
             if (r > n) {
-                setAndRunNext(this, iter.stop);
+                setAndRunNext(this, stopImpl);
             }
             idxIter = permutations(irange(n), r);
             return setAndRunNext(this, main);
@@ -932,7 +950,7 @@
                 }
             }  catch (err) {
                 if (err !== StopIteration) throw err;
-                setAndRunNext(this, iter.stop);
+                setAndRunNext(this, stopImpl);
             }
         };
         return createIter(init);
@@ -968,7 +986,7 @@
                 }
             }  catch (err) {
                 if (err !== StopIteration) throw err;
-                setAndRunNext(this, iter.stop);
+                setAndRunNext(this, stopImpl);
             }
         };
         return createIter(init);
