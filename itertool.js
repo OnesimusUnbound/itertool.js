@@ -35,9 +35,9 @@
         
         // The functional `map` that calls the `callback` for each item in the `array`
         __map = function(array, callback){
-            var result = [];
+            var result = [], size = array.length;
             
-            for (var i = 0; i < array.length; i++){
+            for (var i = 0; i < size; i++){
                 result[i] = callback(array[i]);
             }
             
@@ -68,7 +68,8 @@
         __previous_itertool = root.itertool,
         
         __isMemberOf = function(item, array){
-            for(var idx = 0; idx < array.length; idx++) {
+            var size = array.length;
+            for(var idx = 0; idx < size; idx++) {
                 if(array[idx] === item)
                     return true;
             }
@@ -134,13 +135,15 @@
         
         // quick and dirty eq :(
         __eq = function(item1, item2) {
+            var size;
             switch(__type(item1)){
                 case 'Null':        throw new TypeError;
                 case 'Number':      
                 case 'String':      return item1 === item2;
                 case 'Array':
                     if (item1.length !== item2.length) return false;
-                    for (var i = 0; i < item1.length; i++) {
+                    size = item1.length;
+                    for (var i = 0; i < size; i++) {
                         if (!__eq(item1[i], item2[i])) return false;
                     }
                     return true;
