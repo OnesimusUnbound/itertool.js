@@ -35,9 +35,11 @@
         
         // The functional `map` that calls the `callback` for each item in the `array`
         __map = function(array, callback){
-            var result = [], size = array.length;
+            var size = array.length, 
+                result = new Array(size);
             
-            for (var i = 0; i < size; i++){
+            while (size) {
+                i = --size;
                 result[i] = callback(array[i]);
             }
             
@@ -283,21 +285,29 @@
             var iterClone = function(iterable) {
                 this.queue = []; 
                 this.iterableConv = null;
-                this.cloneIter = function() {
-                    var idx = 0, iterCloneThis = this;
-                    return createIter(function(){
-                        if (!iterCloneThis.iterableConv) 
-                            iterCloneThis.iterableConv = iter(iterable);
+                this.iterable = iterable;
+            };
+            iterClone.prototype.cloneIter = function() {
+                var iterCloneThis = this, 
+                    idx = 0, iterableConv, queue;
+                return createIter(function(){
+                    if (!iterCloneThis.iterableConv) 
+                        iterCloneThis.iterableConv = iter(iterCloneThis.iterable);
                         
-                        return setAndRunNext(this, function(){
-                            if (idx >= iterCloneThis.queue.length) 
-                                iterCloneThis.queue.push(
-                                    iterCloneThis.iterableConv.next());
+                    iterableConv = iterCloneThis.iterableConv
+                    queue = iterCloneThis.queue;
+                    return setAndRunNext(this, function(){
+                        try {
+                            if (idx >= queue.length) 
+                                queue.push(iterableConv.next());
                             
-                            return iterCloneThis.queue[idx++];
-                        });
+                            return queue[idx++];
+                        } catch(err) {
+                            if (err !== StopIteration) throw err;
+                            setAndRunNext(this, stopImpl);
+                        }
                     });
-                };
+                });
             };
         
             __class.createIterCloner = function(iterable) {
