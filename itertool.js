@@ -71,6 +71,7 @@
         
         __isMemberOf = function(item, array){
             var size = array.length;
+            
             for(var idx = 0; idx < size; idx++) {
                 if(array[idx] === item)
                     return true;
@@ -90,49 +91,17 @@
             return uniq;
         }, 
         
-        // Based on quicksort in http://en.literateprograms.org/Quicksort_(JavaScript)
-        // Authors: http://en.literateprograms.org/Quicksort_%28JavaScript%29?action=history
         __sort = (function(){
-            var __random = Math.random,
-                __floor = Math.floor, 
-                
-                quick_sort = function(array) {
-                    var sortedArray = __slice.call(array);
-                    qsort(sortedArray, 0, sortedArray.length);
-                    return sortedArray;
-                },
-                
-                qsort = function(array, begin, end) {
-                    if(end - 1 > begin) {
-                        var pivot = begin + __floor(__random() * (end - begin));
-                        pivot = partition(array, begin, end, pivot);
-                        qsort(array, begin, pivot);
-                        qsort(array, pivot+1, end);
-                    }
-                },
-                
-                partition = function(array, begin, end, pivot) {
-                    var piv = array[pivot];
-                    swap(array, pivot, end - 1);
-                    var store = begin;
-                    var ix;
-                    for(ix = begin; ix < end - 1; ++ix) {
-                        if(array[ix] <= piv) {
-                            swap(array, store, ix);
-                            ++store;
-                        }
-                    }
-                    swap(array, end - 1, store);
-                    return store;
-                },
-                
-                swap = function(array, a, b) {
-                    var tmp = array[a];
-                    array[a] = array[b];
-                    array[b] = tmp;
+            var __arraySort = ArrayProto.sort,
+                __numCmp = function(n1, n2){
+                    return n1 - n2;
                 };
-            
-            return quick_sort;
+                
+            return function(array) {
+                var newArray = __slice.call(array);
+                __arraySort.call(newArray, __numCmp);
+                return newArray;
+            };
         })(),
         
         // quick and dirty eq :(
@@ -145,14 +114,14 @@
                 case 'Array':
                     if (item1.length !== item2.length) return false;
                     size = item1.length;
-                    for (var i = 0; i < size; i++) {
+                    while(size) {
+                        var i = --size;
                         if (!__eq(item1[i], item2[i])) return false;
                     }
                     return true;
                 default:            throw new TypeError;
             }
         },
-        
         
         
         
