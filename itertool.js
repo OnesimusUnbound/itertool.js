@@ -91,18 +91,13 @@
             return uniq;
         }, 
         
-        __sort = (function(){
-            var __arraySort = ArrayProto.sort,
-                __numCmp = function(n1, n2){
-                    return n1 - n2;
-                };
-                
-            return function(array) {
-                var newArray = __slice.call(array);
-                __arraySort.call(newArray, __numCmp);
-                return newArray;
-            };
-        })(),
+        __sort = function(array) {
+            var newArray = __slice.call(array);
+            newArray.sort(function(n1, n2){
+                return n1 - n2;
+            });
+            return newArray;
+        };
         
         // quick and dirty eq :(
         __eq = function(item1, item2) {
