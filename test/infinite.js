@@ -82,7 +82,10 @@ $(document).ready(function() {
     numCall += nums.length;
     
     genRepeat.next(); numCall += 1;
-    raises(function(){ genRepeat.next(); numCall += 1; }, StopIteration, 'calling next will cause StopIteration to be raised');
+    raises(
+        function(){ genRepeat.next(); numCall += 1; }, 
+        function(actual){ return actual === StopIteration; }, 
+        'calling next will cause StopIteration to be raised');
     equals(numCall, 101, 'the repeater should only be called for 101 times');
   });
 });

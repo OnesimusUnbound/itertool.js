@@ -9,7 +9,15 @@ $(document).ready(function() {
     _(4).times(function(){ items.push(gen.next()); });
     equals(items.join(' '), 'A B 2 Test', 'chaining \'AB\', [2], and { "a" : "Test", "z" : "Unit" }');
     
-    raises(function(){ gen = itertool.chain('ZX', 12); gen.next(); gen.next(); gen.next(); }, TypeError, 'number is not allowed in the argument');
+    raises(
+        function(){ 
+            gen = itertool.chain('ZX', 12); 
+            gen.next(); 
+            gen.next(); 
+            gen.next(); 
+        }, 
+        TypeError, 
+        'number is not allowed in the argument');
     
     gen = itertool.chain([1, 2, 3, 4]); items = []; itemCount = 0;
     _(4).times(function(){ gen.next(); itemCount++; });

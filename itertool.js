@@ -54,7 +54,7 @@
 
         // gets the falsy result of the `predicate(item)`
         __negator = function(predicate){
-            if (typeof predicate !== 'function') throw new TypeError;
+            if (__type(predicate) !== 'Function') throw new TypeError;
             return function(item){
                 return !predicate(item);
             };
@@ -97,7 +97,7 @@
                 return n1 - n2;
             });
             return newArray;
-        };
+        },
         
         // quick and dirty eq :(
         __eq = function(item1, item2) {
@@ -970,7 +970,7 @@
     };
     
     // Library version (Major.Minor.Build)
-    itertool.VERSION = '0.1.3';
+    itertool.VERSION = '0.1.5';
     
     // CommonJS `module` is defined
     if (typeof module !== 'undefined' && module.exports) {
