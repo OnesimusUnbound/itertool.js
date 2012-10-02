@@ -190,7 +190,7 @@
         // `option` determines how the object is iterated
         ObjectIterator = itertool.ObjectIterator = function(obj, option) {
             var items, key;
-            return;
+            
             if(__type(obj) === 'Undefined') throw new TypeError();
             items = [];
             option = option || 'values';
@@ -211,8 +211,8 @@
     
         // Accepts string, array, objects and creates the equivalent 
         // iterator by delegating to appropriate iterator builder.
-        iter = (function(){
-            var __class = itertool.iter = function(obj){
+        iter = itertool.iter = (function(){
+            function iter(obj){
                 switch(__type(obj)){
                     case 'Number':
                     case 'RegExp':
@@ -222,26 +222,26 @@
                     case 'Iterator':    return obj;
                     default:            return ObjectIterator.apply(root, arguments);
                 }
-            };
+            }
             
             // raises StopIteration
-            __class.stop = stopImpl;
+            iter.stop = stopImpl;
             
             // Sets the `next` function of `iterator` with `nextCallback`.
-            __class.setNext = function(iterator, nextCallabck) {
+            iter.setNext = function(iterator, nextCallabck) {
                 iterator.next = nextCallabck;
             };
             
             // Sets the `next` function of `gen` with `nextCallback` 
             // and then execute the newly assigned `next`.
-            __class.setAndRunNext = function(iterator, nextCallback) {
+            iter.setAndRunNext = function(iterator, nextCallback) {
                 setNext(iterator, nextCallback);
                 return iterator.next();
             };
             
             // A helper function to instantiate Iterator and implement the 
             // instance's `next` function in `nextImpl`
-            __class.createIter = function(nextImpl) {
+            iter.createIter = function(nextImpl) {
                 var iter = new Iterator();
                 setNext(iter, nextImpl);
                 return iter;
@@ -259,7 +259,7 @@
                     if (!iterCloneThis.iterableConv) 
                         iterCloneThis.iterableConv = iter(iterCloneThis.iterable);
                         
-                    iterableConv = iterCloneThis.iterableConv
+                    iterableConv = iterCloneThis.iterableConv;
                     queue = iterCloneThis.queue;
                     return setAndRunNext(this, function(){
                         try {
@@ -275,11 +275,11 @@
                 });
             };
         
-            __class.createIterCloner = function(iterable) {
+            iter.createIterCloner = function(iterable) {
                 return new iterClone(iterable);
             };
             
-            return __class;
+            return iter;
         })(),
         
         setNext = iter.setNext,
@@ -861,10 +861,15 @@
     };
     
     var permutations = itertool.permutations = function(iterable, r) {
-        var idxIter, pool, n, r,
-            init, main;
+        var idxIter, pool, n,
+            init, main,
+            retrivePoolItem;
         
         if (!iterable) throw new TypeError();
+        
+        retrivePoolItem = function(index){
+            return pool[index];
+        };
         init = function(){
             switch(__type(iterable)) {
                 case 'Array':   pool = iterable; break;
@@ -885,9 +890,7 @@
                 while(true) {
                     indices = idxIter.next();
                     if (__uniq(indices).length === r)
-                        return __map(indices, function(index){
-                            return pool[index];
-                        });
+                        return __map(indices, retrivePoolItem);
                 }
             }  catch (err) {
                 if (err !== StopIteration) throw err;
@@ -898,10 +901,15 @@
     };
 
     var combinations = itertool.combinations = function(iterable, r) {
-        var idxIter, pool, n, r,
-            init, main;
+        var idxIter, pool, n,
+            init, main,
+            retrivePoolItem;
         
         if (!iterable) throw new TypeError();
+        
+        retrivePoolItem = function(index){
+            return pool[index];
+        };
         init = function(){
             switch(__type(iterable)) {
                 case 'Array':   pool = iterable; break;
@@ -922,9 +930,7 @@
                 while(true) {
                     indices = idxIter.next();
                     if (__eq(__sort(indices), indices)) {
-                        return __map(indices, function(index){
-                            return pool[index];
-                        });
+                        return __map(indices, retrivePoolItem);
                     }
                 }
             }  catch (err) {
@@ -938,9 +944,14 @@
     var combinations_with_replacement 
         = itertool.combinations_with_replacement = function(iterable, r) {
         var idxIter, pool, n,
-            init, main;
+            init, main,
+            retrivePoolItem;
         
         if (!iterable) throw new TypeError();
+        
+        retrivePoolItem = function(index){
+            return pool[index];
+        };
         init = function(){
             switch(__type(iterable)) {
                 case 'Array':   pool = iterable; break;
@@ -954,16 +965,13 @@
             return setAndRunNext(this, main);
         };
         main = function(){
-            var indices, poolRetriver;
+            var indices;
             
-            poolRetriver = function(index){
-                return pool[index];
-            };
             try {
                 while(true) {
                     indices = idxIter.next();
                     if (__eq(__sort(indices), indices))
-                        return __map(indices, poolRetriver);
+                        return __map(indices, retrivePoolItem);
                 }
             }  catch (err) {
                 if (err !== StopIteration) throw err;
