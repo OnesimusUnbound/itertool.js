@@ -36,7 +36,8 @@
         // The functional `map` that calls the `callback` for each item in the `array`
         __map = function(array, callback){
             var size = array.length, 
-                result = new Array(size);
+                result = new Array(size),
+                i = 0;
             
             while (size) {
                 i = --size;
@@ -54,7 +55,7 @@
 
         // gets the falsy result of the `predicate(item)`
         __negator = function(predicate){
-            if (__type(predicate) !== 'Function') throw new TypeError;
+            if (__type(predicate) !== 'Function') throw new TypeError()();
             return function(item){
                 return !predicate(item);
             };
@@ -103,7 +104,7 @@
         __eq = function(item1, item2) {
             var size;
             switch(__type(item1)){
-                case 'Null':        throw new TypeError;
+                case 'Null':        throw new TypeError()();
                 case 'Number':      
                 case 'String':      return item1 === item2;
                 case 'Array':
@@ -114,7 +115,7 @@
                         if (!__eq(item1[i], item2[i])) return false;
                     }
                     return true;
-                default:            throw new TypeError;
+                default:            throw new TypeError();
             }
         },
         
@@ -138,17 +139,17 @@
         // `Iterator` the basic iterator from which derived iterators will reference. 
         // This is will not use Mozilla's `Iterator`, instead it will be made compatible
         // with Mozilla's implementation.
-        Iterator = (function(){
-            var __class = itertool.Iterator = function(){};
-            __class.prototype.next = stopImpl;
-            __class.prototype.__iterator__ = function(){ return this; };
+        Iterator = itertool.Iterator = (function(){
+            function Iterator() {}
+            Iterator.prototype.next = stopImpl;
+            Iterator.prototype.__iterator__ = function(){ return this; };
             
-            return __class;
+            return Iterator;
         })(),
         
         // Creates an iterator for array
         ArrayIterator = itertool.ArrayIterator = function(array) {
-            if(__type(array) === 'Undefined') throw new TypeError;
+            if(__type(array) === 'Undefined') throw new TypeError();
         
             var size = array.length,
                 idx = 0;
@@ -163,7 +164,7 @@
         StringIterator = itertool.StringIterator = function(string, option){
             var items, size, idx;
             
-            if(__type(string) === 'Undefined') throw new TypeError;
+            if(__type(string) === 'Undefined') throw new TypeError();
             option = option || "";
             items = [];
             
@@ -189,8 +190,8 @@
         // `option` determines how the object is iterated
         ObjectIterator = itertool.ObjectIterator = function(obj, option) {
             var items, key;
-            
-            if(__type(obj) === 'Undefined') throw new TypeError;
+            return;
+            if(__type(obj) === 'Undefined') throw new TypeError();
             items = [];
             option = option || 'values';
             
@@ -200,7 +201,7 @@
                         case 'keys'     : items.push(key); break;
                         case 'all'      : items.push([key, obj[key]]); break;
                         case 'values'   :
-                        default         : items.push(obj[key]);
+                        default         : items.push(obj[key]); break;
                     }
                 }
             }
@@ -215,7 +216,7 @@
                 switch(__type(obj)){
                     case 'Number':
                     case 'RegExp':
-                    case 'Null':        throw new TypeError;
+                    case 'Null':        throw new TypeError();
                     case 'String':      return StringIterator.apply(root, arguments);
                     case 'Array':       return ArrayIterator.apply(root, arguments);
                     case 'Iterator':    return obj;
@@ -241,7 +242,7 @@
             // A helper function to instantiate Iterator and implement the 
             // instance's `next` function in `nextImpl`
             __class.createIter = function(nextImpl) {
-                var iter = new Iterator;
+                var iter = new Iterator();
                 setNext(iter, nextImpl);
                 return iter;
             };
@@ -402,9 +403,9 @@
         var iterables, size, iterIdx, currentIter,
             init, main;
         
-        iterables = __slice.call(arguments)
+        iterables = __slice.call(arguments);
         size = iterables.length;
-        iterIdx = 0
+        iterIdx = 0;
         
         init = function(){
             currentIter = iter(iterables[iterIdx++]);
@@ -494,7 +495,7 @@
         var firstValid, 
             init, dropFirstItems, main;
         
-        if (__type(predicate) !== 'Function') throw new TypeError;
+        if (__type(predicate) !== 'Function') throw new TypeError();
         
         init = function(){
             iterable = iter(iterable);
@@ -523,7 +524,7 @@
         var takenItem, 
             init, main;
         
-        if (__type(predicate) !== 'Function') throw new TypeError;
+        if (__type(predicate) !== 'Function') throw new TypeError();
         
         init = function(){
             iterable = iter(iterable);
@@ -547,7 +548,7 @@
             init, main;
         iterable = iterable || predicate;
         predicate = arguments.length === 2 ? predicate : __truthy;
-        if (typeof predicate !== 'function') throw new TypeError;
+        if (typeof predicate !== 'function') throw new TypeError();
 
         init = function(){
             iterable = iter(iterable);
@@ -579,7 +580,7 @@
     var imap = itertool.imap = function(callback) {
         var iterables, zippedIter,
             init, main;
-        if (__type(callback) !== 'Function') throw new TypeError;
+        if (__type(callback) !== 'Function') throw new TypeError();
         iterables = __slice.call(arguments, 1);
         
         init = function(){
@@ -625,7 +626,8 @@
     // `izip(iterables...)`
     var izip = itertool.izip = function() {
         var size,
-            init, main;
+            init, main, 
+            iterables;
             
         iterables = __slice.call(arguments);
         size = iterables.length;
@@ -655,7 +657,7 @@
     // `izip_longest(fillvalue = "", iterables...)`
     var izip_longest = itertool.izip_longest = function() {
         var iterables, fillvalue, numIterables,
-            init, main;
+            init, main, result;
             
         iterables = __slice.call(arguments, 1),
         fillvalue = arguments[0] || "";
@@ -699,7 +701,7 @@
     var starmap = itertool.starmap = function(callback, argList) {
         var iterable, 
             init, main;
-        if (__type(callback) !== 'Function') throw new TypeError;
+        if (__type(callback) !== 'Function') throw new TypeError();
         
         init = function(){
             iterable = iter(argList);
@@ -752,7 +754,7 @@
             }
             tgtkey = currkey;
             return [currkey, grouper(tgtkey, true)];
-        }
+        };
         grouper = function(ptgtkey, continueIter){
             return createIter(function(){
                 var retvalue; 
@@ -862,7 +864,7 @@
         var idxIter, pool, n, r,
             init, main;
         
-        if (!iterable) throw new TypeError;
+        if (!iterable) throw new TypeError();
         init = function(){
             switch(__type(iterable)) {
                 case 'Array':   pool = iterable; break;
@@ -899,7 +901,7 @@
         var idxIter, pool, n, r,
             init, main;
         
-        if (!iterable) throw new TypeError;
+        if (!iterable) throw new TypeError();
         init = function(){
             switch(__type(iterable)) {
                 case 'Array':   pool = iterable; break;
@@ -935,10 +937,10 @@
     
     var combinations_with_replacement 
         = itertool.combinations_with_replacement = function(iterable, r) {
-        var idxIter, pool, n, r,
+        var idxIter, pool, n,
             init, main;
         
-        if (!iterable) throw new TypeError;
+        if (!iterable) throw new TypeError();
         init = function(){
             switch(__type(iterable)) {
                 case 'Array':   pool = iterable; break;
@@ -952,14 +954,16 @@
             return setAndRunNext(this, main);
         };
         main = function(){
-            var indices;
+            var indices, poolRetriver;
+            
+            poolRetriver = function(index){
+                return pool[index];
+            };
             try {
                 while(true) {
                     indices = idxIter.next();
                     if (__eq(__sort(indices), indices))
-                        return __map(indices, function(index){
-                            return pool[index];
-                        });
+                        return __map(indices, poolRetriver);
                 }
             }  catch (err) {
                 if (err !== StopIteration) throw err;
