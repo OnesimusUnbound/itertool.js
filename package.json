@@ -6,6 +6,6 @@
   "author"        : "OnesimusUnbound <marcelino.deseo@gmail.com>",
   "contributors"  : [],
   "repository"    : {"type": "git", "url": "git://github.com/OnesimusUnbound/itertool.js"},
-  "main"          : "itertool.js",
+  "main"          : "src/itertool.js",
   "version"       : "0.1.*"
 }

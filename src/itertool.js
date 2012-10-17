@@ -860,6 +860,10 @@
         return createIter(init);
     };
     
+    // Return successive `r` length permutations of elements in the `iterable`.
+    // If `r` is not provided, the maximum permutation is used.
+    // 
+    // `permutations(iterable, [r])`
     var permutations = itertool.permutations = function(iterable, r) {
         var idxIter, pool, n,
             init, main,
@@ -900,6 +904,9 @@
         return createIter(init);
     };
 
+    // Return `r` length subsequences of elements from the input `iterable`.
+    //
+    // `combinations(iterable, r)`
     var combinations = itertool.combinations = function(iterable, r) {
         var idxIter, pool, n,
             init, main,
@@ -941,6 +948,11 @@
         return createIter(init);
     };
     
+    // Return `r` length subsequences of elements 
+    // from the input `iterable` allowing individual 
+    // elements to be repeated more than once.
+    //
+    // `combinations_with_replacement(iterable, r)`
     var combinations_with_replacement 
         = itertool.combinations_with_replacement = function(iterable, r) {
         var idxIter, pool, n,
