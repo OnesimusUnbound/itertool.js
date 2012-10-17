@@ -7,5 +7,5 @@
   "contributors"  : [],
   "repository"    : {"type": "git", "url": "git://github.com/OnesimusUnbound/itertool.js"},
   "main"          : "src/itertool.js",
-  "version"       : "0.1.*"
+  "version"       : "0.2.0"
 }

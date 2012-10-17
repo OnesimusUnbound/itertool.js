@@ -1,10 +1,10 @@
 // itertool.js
 // ===========
 // 
-// (c) 2011 OnesimusUnbound <marcelino dat deseo aet gmail dat com>
+// (c) 2012 OnesimusUnbound <marcelino dat deseo aet gmail dat com>
 // itertools.js is freely distributable under the terms of the MIT license.
 // Documentation: https://github.com/OnesimusUnbound/itertool.js
-// Version 0.1.*
+// Version 0.2.0
 //
 // The itertool.js is a port from Python's `itertools` to JavaScript,
 // without using Mozilla's `Iterator` and `yield`, relying instead 
@@ -548,7 +548,7 @@
             init, main;
         iterable = iterable || predicate;
         predicate = arguments.length === 2 ? predicate : __truthy;
-        if (typeof predicate !== 'function') throw new TypeError();
+        if (__type(predicate) !== 'Function') throw new TypeError();
 
         init = function(){
             iterable = iter(iterable);
@@ -994,7 +994,7 @@
     };
     
     // Library version (Major.Minor.Build)
-    itertool.VERSION = '0.1.5';
+    itertool.VERSION = '0.2.0';
     
     // CommonJS `module` is defined
     if (typeof module !== 'undefined' && module.exports) {
