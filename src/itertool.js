@@ -21,7 +21,6 @@
         
         // Determines the type of the object. Relevant to this library detect of 
         // the type of the passed parameter for validation
-        __typeMatcher = /^\[object (.*)\]$/,
         __type = function(obj){
             if (typeof obj === 'undefined') {
                 return "Undefined";
@@ -30,7 +29,7 @@
             } else if (typeof obj.next === 'function') {
                 return "Iterator";
             } else {
-                return ObjectProto.toString.call(obj).match(__typeMatcher)[1]; 
+                return ObjectProto.toString.call(obj).match(/^\[object (.*)\]$/)[1]; 
             }
         },
         
@@ -397,8 +396,7 @@
     // Terminating iterators creates itrators that will surely terminate 
     // (unless you passed an infinite iterable!)
     
-    // This will create iterator that "concatenate" all iterables passed, 
-    // creating one iterable
+    // This will create iterator that "concatenate" all iterables passed, creating one iterable
     // 
     // `chain(iterables...)`
     var chain = itertool.chain = function(){
@@ -431,8 +429,8 @@
         return createIter(init);
     }; 
     
-    // This will create iterator that "concatenate" all iterable in `iterables` 
-    // passed, creating one iterable
+    // This will create iterator that "concatenate" all iterable in `iterables` passed, 
+    // creating one iterable
     // 
     // `chain_from_iterable(iterables)`
     var chain_from_iterable = itertool.chain_from_iterable = function(iterables){
@@ -463,8 +461,8 @@
         });
     };
     
-    // This returns iterator where the item in `data` whose corresponding item 
-    // in `selectors` will evaluate true in truthiness
+    // This returns iterator where the item in `data` whose corresponding item in `selectors` 
+    // will evaluate true in truthiness
     // 
     // `compress(data, selectors)` 
     var compress = itertool.compress = function(data, selectors) {

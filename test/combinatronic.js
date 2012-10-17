@@ -1,4 +1,4 @@
-$(document).ready(function() {
+
 
   module("Combinatronic iterator functions");
   
@@ -298,4 +298,3 @@ $(document).ready(function() {
         }
     }
   });
-});

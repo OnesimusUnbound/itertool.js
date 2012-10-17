@@ -1,5 +1,3 @@
-$(document).ready(function() {
-
   module("Utility functions");
   
   test("utility: noConflict", function() {
@@ -26,5 +24,3 @@ $(document).ready(function() {
         
     raises(function(){ itertool.toArray(); }, TypeError, 'empty parameter will raise TypeError');
   });
-  
-});

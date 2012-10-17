@@ -1,5 +1,3 @@
-$(document).ready(function() {
-
   module("Infinite iterator functions");
   
   test("infinite: counter", function() {
@@ -88,4 +86,3 @@ $(document).ready(function() {
         'calling next will cause StopIteration to be raised');
     equals(numCall, 101, 'the repeater should only be called for 101 times');
   });
-});

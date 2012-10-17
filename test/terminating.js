@@ -1,5 +1,3 @@
-$(document).ready(function() {
-
   module("Terminating iterator functions");
   
   test("terminating: chain", function() {
@@ -739,4 +737,3 @@ $(document).ready(function() {
         function(actual){ return actual === StopIteration; },
         'raises StopIteration when the end has been reached');
   });
-});

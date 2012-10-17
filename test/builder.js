@@ -1,4 +1,4 @@
-$(document).ready(function() {
+
 
   module("Builder iterator functions");
   
@@ -151,4 +151,4 @@ $(document).ready(function() {
     
   });
   
-});
+
